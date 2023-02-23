@@ -1,6 +1,6 @@
 
 <p align="center">
-<img src="profile/www/wide_logo.png">
+<img src="https://raw.githubusercontent.com/TrustworthyAIJulia/.github/main/profile/www/wide_logo.png">
 </p>
 
 # Trustworthy Artificial Intelligence in Julia
