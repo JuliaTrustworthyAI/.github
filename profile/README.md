@@ -15,6 +15,8 @@ Taija is the organization that hosts software geared towards **T**rustworthy **A
 
 Are you working on a Julia package that would fit well into this organization? Or do you perhaps have ideas for future projects? I’d love to hear about it, so please do get in touch!
 
-Note: I’m still new to “GitHub Organizations”, so bear with me. Would love for this to turn into an open and active organization bringing together Julia developers who are interested in Trustworthy AI.
+Note: I’m still new to “GitHub Organizations”, so please bear with me. I would love for this to turn into an open and active organization bringing together Julia developers who are interested in promoting Trustworthy AI.
 
-## Taija?
+## 🐶 Taija?
+
+Taija stands for **T**rustworthy **A**rtificial **I**ntelligence in **J**uli**a**. When thinking about a logo that embodies trustworthiness, I quickly landed on 🐶.
