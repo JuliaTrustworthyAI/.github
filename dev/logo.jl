@@ -27,6 +27,7 @@ bg_color = RGB(181/255, 198/255, 255/255)
 function dog_head(radius; main_color=julia_colors[:blue], bg_color=bg_color)
 
     sethue(main_color)
+    setline(Int(round(radius / 50)))
 
     @layer begin
 
@@ -167,5 +168,52 @@ function draw_wide_logo(
     preview()
 end
 
+function draw_long_logo(
+    filename="profile/www/long_logo.png";
+    _pkg_name="Taija",
+    font_size=800,
+    font_family="Tamil MN",
+    font_fill=bg_color,
+    font_color=Luxor.julia_blue,
+    _bg_color=RGB(14/255, 23/255, 55/255),
+    picture_kwargs...
+)
+
+    # Setup:
+    height = Int(round(font_size * 7.5))
+    width = 0.6 * height
+
+    Drawing(width, height, filename)
+    origin()
+    background(_bg_color)
+
+    # Picture:
+    @layer begin
+        translate(Point(0, -0.1*height))
+        logo_picture(height * 0.85)
+    end
+
+    # Text:
+    @layer begin
+        translate(Point(0, 0.35*height))
+        fontsize(font_size)
+        fontface(font_family)
+        setcolor(font_fill)
+        textoutlines(_pkg_name, O, :path, valign=:middle, halign=:center)
+        fillpreserve()
+        setcolor(font_color..., 1.0)
+    end
+
+    @layer begin
+        img = readpng("profile/www/qr_code.png")
+        w = img.width
+        h = img.height
+    end
+
+    finish()
+    preview()
+end
+
 draw_small_logo()
 draw_wide_logo()
+draw_long_logo(bg_color=bg_color)
