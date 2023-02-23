@@ -115,7 +115,7 @@ end
 function draw_wide_logo(
     filename="profile/www/wide_logo.png";
     _pkg_name="Taija",
-    font_size=150,
+    font_size=800,
     font_family="Tamil MN",
     font_fill=bg_color,
     font_color=Luxor.julia_blue,
