@@ -22,34 +22,38 @@ julia_colors = Dict(
     :green => Luxor.julia_green,
     :purple => Luxor.julia_purple,
 )
-bg_color = RGBA(julia_colors[:blue]..., 0.2)
+bg_color = RGB(181/255, 198/255, 255/255)
 
-function dog_head(radius)
+function dog_head(radius; main_color=julia_colors[:blue], bg_color=bg_color)
+
+    sethue(main_color)
 
     @layer begin
 
         translate(Point(0, -0.4radius))
 
-        A, B = [Point(x, 0) for x in [-0.75radius, 0.75radius]]
-
-        # Head shape:
         @layer begin
+
+            # Ears:
+            C, D = [Point(x, 0.3radius) for x in [-0.8radius, 0.8radius]]
+            @layer begin
+                rotate(0.15 * π)
+                ellipse(C, 0.5radius, 1.25radius, action=:fill)
+            end
+            @layer begin
+                rotate(-0.15 * π)
+                ellipse(D, 0.5radius, 1.25radius, action=:fill)
+            end
+
+            # Head shape:
+            A, B = [Point(x, 0) for x in [-0.75radius, 0.75radius]]
             newpath()
             arc2sagitta(B, A, 1.5radius, action=:path)
             arc2sagitta(A, B, 0.75radius, action=:path)
             closepath()
-            do_action(:stroke)
-        end
+            sethue(bg_color)
+            do_action(:fill)
 
-        # Ears:
-        C, D = [Point(x, 0.3radius) for x in [-0.8radius, 0.8radius]]
-        @layer begin
-            rotate(0.15 * π)
-            ellipse(C, 0.5radius, 1.25radius, action=:fill)
-        end
-        @layer begin
-            rotate(-0.15 * π)
-            ellipse(D, 0.5radius, 1.25radius, action=:fill)
         end
 
         # Eyes
@@ -65,8 +69,8 @@ function dog_head(radius)
             line(Point(0, 0), pt1, action=:stroke)
             pt2 = Point(-0.2radius, y)
             pt3 = Point(0.2radius, y)
-            arc2sagitta(pt1, pt2, 0.11radius, action = :stroke)
-            arc2sagitta(pt3, pt1, 0.11radius, action = :stroke)
+            arc2sagitta(pt1, pt2, 0.11radius, action=:stroke)
+            arc2sagitta(pt3, pt1, 0.11radius, action=:stroke)
 
         end
 
@@ -87,8 +91,7 @@ function dog_head(radius)
 end
 
 function logo_picture(
-    frame_size=500;
-    ms=frame_size // 50
+    frame_size=500
 )
 
     radius = frame_size / 3
@@ -103,34 +106,14 @@ function draw_small_logo(width=500; bg_color="transparent", filename="www/logo.s
         background(bg_color)
     end
     origin()
-    logo_picture(width; kwrgs...)
+    logo_picture(width)
     finish()
     preview()
 end
 
-function animate_small_logo(filename="www/logo.gif", width=500; bg_color="transparent", kwrgs...)
-    frame_size = width
-    anim = Movie(frame_size, frame_size, "logo", 1:10)
-    function backdrop(scene, framenumber)
-        background(bg_color)
-    end
-    function frame(scene, framenumber)
-        logo_picture(; kwrgs..., m_alpha=1.0, switch_ce_color=false, bg_color=julia_colors[:blue], n_steps=framenumber)
-    end
-    animate(
-        anim, 
-        [
-            Scene(anim, backdrop, 1:10),
-            Scene(anim, frame, 1:10, easingfunction=easeinoutcubic)
-        ],
-        creategif=true,
-        pathname=filename
-    )
-end
-
 function draw_wide_logo(
     filename="www/wide_logo.png";
-    _pkg_name="Julia TrustworthyML",
+    _pkg_name="Taija",
     font_size=150,
     font_family="Tamil MN",
     font_fill=bg_color,
@@ -140,13 +123,13 @@ function draw_wide_logo(
 )
 
     # Setup:
-    height = Int(round(font_size * 2.4))
+    height = Int(round(font_size * 1.5))
     fontsize(font_size)
     fontface(font_family)
     strs = split(_pkg_name)
     text_col_width = Int(round(maximum(map(str -> textextents(str)[3], strs)) * 1.05))
     width = Int(round(height + text_col_width))
-    cw = [height, text_col_width]
+    cw = [text_col_width, height]
     cells = Luxor.Table(height, cw)
     ms = Int(round(height / 10))
     db_stroke_size = Int(round(height / 50))
@@ -155,22 +138,9 @@ function draw_wide_logo(
     origin()
     background(bg_color)
 
-    # Picture:
-    @layer begin
-        Luxor.translate(cells[1])
-        logo_picture(
-            ;
-            frame_size=height,
-            margin=0.1,
-            ms=ms,
-            db_stroke_size=db_stroke_size,
-            picture_kwargs...
-        )
-    end
-
     # Text:
     @layer begin
-        Luxor.translate(cells[2])
+        Luxor.translate(cells[1])
         fontsize(font_size)
         fontface(font_family)
         tiles = Tiler(cells.colwidths[2], height, length(strs), 1)
@@ -187,24 +157,15 @@ function draw_wide_logo(
         end
     end
 
+    # Picture:
+    @layer begin
+        Luxor.translate(cells[2])
+        logo_picture(height)
+    end
+
     finish()
     preview()
 end
 
-_seed = 405
-picture_kwargs = (
-    seed=_seed,
-    margin=0.2,
-    ndots=60,
-    ms=25,
-    cluster_std=0.1,
-    clip_border=true,
-    m_alpha=0.2,
-    generator=GravitationalGenerator(
-        decision_threshold=0.95,
-        opt=Descent(0.005),
-    )
-)
-
-draw_small_logo(; picture_kwargs...)
-draw_wide_logo(; picture_kwargs...)
+draw_small_logo()
+draw_wide_logo()
