@@ -175,7 +175,7 @@ function draw_long_logo(
     font_family="Tamil MN",
     font_fill=bg_color,
     font_color=Luxor.julia_blue,
-    _bg_color=RGB(14/255, 23/255, 55/255),
+    _bg_color=RGB(14 / 255, 23 / 255, 55 / 255),
     picture_kwargs...
 )
 
@@ -189,13 +189,13 @@ function draw_long_logo(
 
     # Picture:
     @layer begin
-        translate(Point(0, -0.1*height))
+        translate(Point(0, -0.1 * height))
         logo_picture(height * 0.85)
     end
 
     # Text:
     @layer begin
-        translate(Point(0, 0.35*height))
+        translate(Point(0, 0.35 * height))
         fontsize(font_size)
         fontface(font_family)
         setcolor(font_fill)
@@ -204,10 +204,32 @@ function draw_long_logo(
         setcolor(font_color..., 1.0)
     end
 
+    # QR code:
     @layer begin
+        img_size = 0.075 * width
+        x_pos = (width / 2) - (1.2 * img_size)
+        y_pos = ((height / 2) - (1.2 * img_size))
+        translate(Point(x_pos, y_pos))
         img = readpng("profile/www/qr_code.png")
         w = img.width
+        Luxor.scale(img_size / w, img_size / w)
+        placeimage(img, Point(0, 0))
+    end
+
+    # Delft logo:
+    @layer begin
+        img_size = 0.075 * width
+        x_pos = ((width / 2) - 2 * (1.2 * img_size))
+        y_pos = ((height / 2) - (1.2 * img_size))
+        translate(Point(x_pos, y_pos))
+        sethue("red")
+        img = readpng("profile/www/delft_logo.png")
+        w = img.width
         h = img.height
+        Luxor.scale(img_size / w, img_size / w)
+        translate(Point(0, w/2))
+        y_pos = - h/2
+        placeimage(img, Point(0, y_pos))
     end
 
     finish()
@@ -216,4 +238,4 @@ end
 
 draw_small_logo()
 draw_wide_logo()
-draw_long_logo(bg_color=bg_color)
+draw_long_logo()
