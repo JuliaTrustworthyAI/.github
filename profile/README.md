@@ -1,4 +1,4 @@
 
-![](www/wide_logo.png)
+![](profile/www/wide_logo.png)
 
 `Taija` stands for Trustworthy AI in Julia.

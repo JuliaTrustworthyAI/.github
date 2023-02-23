@@ -99,7 +99,7 @@ function logo_picture(
 
 end
 
-function draw_small_logo(width=500; bg_color="transparent", filename="www/logo.svg", kwrgs...)
+function draw_small_logo(width=500; bg_color="transparent", filename="profile/www/logo.png", kwrgs...)
     frame_size = width
     Drawing(frame_size, frame_size, filename)
     if !isnothing(bg_color)
@@ -112,7 +112,7 @@ function draw_small_logo(width=500; bg_color="transparent", filename="www/logo.s
 end
 
 function draw_wide_logo(
-    filename="www/wide_logo.png";
+    filename="profile/www/wide_logo.png";
     _pkg_name="Taija",
     font_size=150,
     font_family="Tamil MN",
