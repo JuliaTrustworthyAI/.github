@@ -51,7 +51,9 @@ Taija stands for **T**rustworthy **A**rtificial **I**ntelligence in **J**uli**a*
 
 Some of Taija's contributors have been partially or fully funded by one or more of the following entities:
 
-[![](www/TUDelft_logo_black.png)]()
+| | |
+:-------------------------:|:-------------------------:
+|[![](www/TUDelft_logo_black.png)]()|[![](www/ing.jpeg)]()|
 
 ## 📬 Contact
 
