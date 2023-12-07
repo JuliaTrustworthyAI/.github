@@ -53,14 +53,18 @@ Some of Taija's contributors have been partially or fully funded by one or more 
 
 <table width="100%">
   <tr>
-  <td [![](www/TUDelft_logo_black.png)]() width="50%"></td>
-  <td width="50%"></td>
+  <td [![](www/TUDelft_logo_black.png)]() width="50%">
+    <a>
+    <img src="www/TUDelft_logo_black.png" alt="TU Delft Logo">
+    </a>
+  </td>
+  <td width="50%">
+    <a>
+    <img src="www/ing.jpeg" alt="ING Logo">
+    </a>
+  </td>
   </tr>
 </table>
-
-| | |
-:-------------------------:|:-------------------------:
-|[![](www/TUDelft_logo_black.png)]()|[![](www/ing.jpeg)]()|
 
 ## 📬 Contact
 
