@@ -7,16 +7,54 @@
 
 Taija is the organization that hosts software geared towards **T**rustworthy **A**rtificial **I**ntelligence in **J**uli**a**.
 
-## 🔁 Status
+## 🏠 About 
 
-[@patalt](https://github.com/pat-alt): This project is still in its infancy. My goal is to collect various Julia packages geared towards Trustworthy Artificial Intelligence in a single home. As a first step towards this goal, I intend to transfer various projects that I have been working on to this organization.
+Taija currently covers a range of approaches towards making AI systems more trustworthy:
 
-## 👐 Working on related projects?
+- Model Explainability (`CounterfactualExplanations.jl`)
+- Algorithmic Recourse (`CounterfactualExplanations.jl`, `AlgorithmicRecourseDynamics.jl`)
+- Predictive Uncertainty Quantification (`ConformalPrediction.jl`, `LaplaceRedux.jl`)
+- Effortless Bayesian Deep Learning (`LaplaceRedux.jl`)
+- Hybrid Learning (`JointEnergyModels.jl`)
 
-Are you working on a Julia package that would fit well into this organization? Or do you perhaps have ideas for future projects? I’d love to hear about it, so please do get in touch!
+Various meta packages can be used to extend the core functionality:
 
-Note: I’m still new to “GitHub Organizations”, so please bear with me. I would love for this to turn into an open and active organization bringing together Julia developers who are interested in promoting Trustworthy AI.
+- Plotting (`TaijaPlotting.jl`)
+- Datasets for testing and benchmarking (`TaijaData.jl`)
+- Interoperability with other programming languages (`TaijaInteroperability.jl`)
+
+## 🔗 Related Software
+
+Our packages are currently tailored towards the following larger package ecosystems for AI and machine learning in Julia:
+
+- FluxML
+- MLJ
+
+Other external packages and ecosystems related to Trustworthy AI in Julia include:
+
+- [Julia-XAI](https://github.com/Julia-XAI)
+- [ShapML.jl](https://github.com/nredell/ShapML.jl)
+
+## 👐 Contribute
+
+We welcome contributions of any kind. If you want to get involved or use our software for or project, please feel free to reach out. If you have questions, comments or issues related to specific packages, please feel free to open issues or discussions on the respective repository.
+
+####  Working on related projects?
+
+Are you working on a Julia package that would fit well into this organization? Or do you perhaps have ideas for future projects? We’d love to hear about it, so please do get in touch!
 
 ## 🐶 Taija?
 
-Taija stands for **T**rustworthy **A**rtificial **I**ntelligence in **J**uli**a**. When thinking about a logo that embodies trustworthiness, I quickly landed on 🐶.
+Taija stands for **T**rustworthy **A**rtificial **I**ntelligence in **J**uli**a**. When thinking about a logo that embodies trustworthiness, we quickly landed on 🐶.
+
+## 🙏 Sponsors
+
+Some of Taija's contributors have been partially or fully funded by one or more of the following entities:
+
+[![](www/TUDelft_logo_black.png)]()
+
+## 📬 Contact
+
+You can find @pat-alt's socials and contact details on his website: [www.paltmeyer.com](www.paltmeyer.com). 
+
+
