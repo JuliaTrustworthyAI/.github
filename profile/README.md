@@ -11,24 +11,24 @@ Taija is the organization that hosts software geared towards **T**rustworthy **A
 
 Taija currently covers a range of approaches towards making AI systems more trustworthy:
 
-- Model Explainability (`CounterfactualExplanations.jl`)
-- Algorithmic Recourse (`CounterfactualExplanations.jl`, `AlgorithmicRecourseDynamics.jl`)
-- Predictive Uncertainty Quantification (`ConformalPrediction.jl`, `LaplaceRedux.jl`)
-- Effortless Bayesian Deep Learning (`LaplaceRedux.jl`)
-- Hybrid Learning (`JointEnergyModels.jl`)
+- Model Explainability ([CounterfactualExplanations.jl](https://github.com/JuliaTrustworthyAI/CounterfactualExplanations.jl))
+- Algorithmic Recourse ([CounterfactualExplanations.jl](https://github.com/JuliaTrustworthyAI/CounterfactualExplanations.jl), [AlgorithmicRecourseDynamics.jl](https://github.com/JuliaTrustworthyAI/AlgorithmicRecourseDynamics.jl))
+- Predictive Uncertainty Quantification ([ConformalPrediction.jl](https://github.com/JuliaTrustworthyAI/ConformalPrediction.jl), [LaplaceRedux.jl](https://github.com/JuliaTrustworthyAI/LaplaceRedux.jl))
+- Effortless Bayesian Deep Learning ([LaplaceRedux.jl](https://github.com/JuliaTrustworthyAI/LaplaceRedux.jl))
+- Hybrid Learning ([JointEnergyModels.jl](https://github.com/JuliaTrustworthyAI/JointEnergyModels.jl))
 
 Various meta packages can be used to extend the core functionality:
 
-- Plotting (`TaijaPlotting.jl`)
-- Datasets for testing and benchmarking (`TaijaData.jl`)
-- Interoperability with other programming languages (`TaijaInteroperability.jl`)
+- Plotting ([TaijaPlotting.jl](https://github.com/JuliaTrustworthyAI/TaijaPlotting.jl))
+- Datasets for testing and benchmarking ([TaijaData.jl](https://github.com/JuliaTrustworthyAI/TaijaData.jl))
+- Interoperability with other programming languages ([TaijaInteroperability.jl](https://github.com/JuliaTrustworthyAI/TaijaInteroperability.jl))
 
 ## 🔗 Related Software
 
 Our packages are currently tailored towards the following larger package ecosystems for AI and machine learning in Julia:
 
-- FluxML
-- MLJ
+- [FluxML](https://fluxml.ai/Flux.jl/stable/)
+- [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/)
 
 Other external packages and ecosystems related to Trustworthy AI in Julia include:
 
