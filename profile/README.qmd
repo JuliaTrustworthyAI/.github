@@ -57,10 +57,6 @@ Some of Taija's contributors have been partially or fully funded by one or more 
   </tr>
 </table>
 
-## 📬 Contact
-
-You can find \@pat-alt's socials and contact details on his website: [www.paltmeyer.com](www.paltmeyer.com). 
-
 ## 📚 Research using Taija
 
 Taija has been used in the following research projects:
@@ -87,3 +83,7 @@ Taija stands for **T**rustworthy **A**rtificial **I**ntelligence in **J**uli**a*
 
 ::: {#refs}
 :::
+
+## 📬 Contact
+
+You can find \@pat-alt's socials and contact details on his website: [www.paltmeyer.com](www.paltmeyer.com). 

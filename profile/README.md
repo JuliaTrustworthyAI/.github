@@ -50,10 +50,6 @@ Some of Taija’s contributors have been partially or fully funded by one or mor
 </tr>
 </table>
 
-## 📬 Contact
-
-You can find @pat-alt’s socials and contact details on his website: [www.paltmeyer.com](www.paltmeyer.com).
-
 ## 📚 Research using Taija
 
 Taija has been used in the following research projects:
@@ -87,3 +83,7 @@ Altmeyer, Patrick, Giovan Angela, Aleksander Buszydlik, Karol Dobiczek, Arie van
 </div>
 
 </div>
+
+## 📬 Contact
+
+You can find @pat-alt’s socials and contact details on his website: [www.paltmeyer.com](www.paltmeyer.com).
