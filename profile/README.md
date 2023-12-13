@@ -52,7 +52,7 @@ Some of Taija’s contributors have been partially or fully funded by one or mor
 
 ## 📚 Research using Taija
 
-Taija has been used in the following research projects:
+Taija has been used in the following publications:
 
 - *Faithful Model Explanations through Energy-Constrained Conformal Counterfactuals* (upcoming at [AAAI 2024](https://aaai.org/aaai-conference/aaai-24-technical-program/)).
 - *Explaining Black-Box Models through Counterfactuals* (Altmeyer, Deursen, and Liem 2023) published in [JuliaCon Proceedings](https://proceedings.juliacon.org/papers/10.21105/jcon.00130).
