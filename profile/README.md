@@ -54,7 +54,9 @@ Some of Taija’s contributors have been partially or fully funded by one or mor
 
 Taija has been used in the following research projects:
 
-- Endogenous Macrodynamics in Algorithmic Recourse (Altmeyer et al. 2023)
+- *Faithful Model Explanations through Energy-Constrained Conformal Counterfactuals* (upcoming at [AAAI 2024](https://aaai.org/aaai-conference/aaai-24-technical-program/)).
+- *Explaining Black-Box Models through Counterfactuals* (Altmeyer, Deursen, and Liem 2023) published in [JuliaCon Proceedings](https://proceedings.juliacon.org/papers/10.21105/jcon.00130).
+- *Endogenous Macrodynamics in Algorithmic Recourse* (Altmeyer et al. 2023) presented at [IEEE SaTML 2023](https://satml.org/2023/accepted-papers/).
 
 ## 🔗 Related Software
 
@@ -79,6 +81,12 @@ Taija stands for **T**rustworthy **A**rtificial **I**ntelligence in **J**uli**a*
 <div id="ref-altmeyer2023endogenous" class="csl-entry">
 
 Altmeyer, Patrick, Giovan Angela, Aleksander Buszydlik, Karol Dobiczek, Arie van Deursen, and Cynthia CS Liem. 2023. “Endogenous Macrodynamics in Algorithmic Recourse.” In *2023 IEEE Conference on Secure and Trustworthy Machine Learning (SaTML)*, 418–31. IEEE.
+
+</div>
+
+<div id="ref-altmeyer2023explaining" class="csl-entry">
+
+Altmeyer, Patrick, Arie van Deursen, and Cynthia Liem. 2023. “Explaining Black-Box Models Through Counterfactuals.” *arXiv Preprint arXiv:2308.07198*.
 
 </div>
 

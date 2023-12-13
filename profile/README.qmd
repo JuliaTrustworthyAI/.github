@@ -61,7 +61,9 @@ Some of Taija's contributors have been partially or fully funded by one or more 
 
 Taija has been used in the following research projects:
 
-- Endogenous Macrodynamics in Algorithmic Recourse [@altmeyer2023endogenous]
+- *Faithful Model Explanations through Energy-Constrained Conformal Counterfactuals* (upcoming at [AAAI 2024](https://aaai.org/aaai-conference/aaai-24-technical-program/)).
+- *Explaining Black-Box Models through Counterfactuals* [@altmeyer2023explaining] published in [JuliaCon Proceedings](https://proceedings.juliacon.org/papers/10.21105/jcon.00130).
+- *Endogenous Macrodynamics in Algorithmic Recourse* [@altmeyer2023endogenous] presented at [IEEE SaTML 2023](https://satml.org/2023/accepted-papers/).
 
 ## 🔗 Related Software
 
