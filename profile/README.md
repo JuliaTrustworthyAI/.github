@@ -27,9 +27,17 @@ Various meta packages can be used to extend the core functionality:
 
 We welcome contributions of any kind. If you want to get involved or use our software for or project, please feel free to reach out. If you have questions, comments or issues related to specific packages, please feel free to open issues or discussions on the respective repository.
 
-#### Working on related projects?
+### Working on related projects?
 
 Are you working on a Julia package that would fit well into this organization? Or do you perhaps have ideas for future projects? We’d love to hear about it, so please do get in touch!
+
+### General Pointers for Contributors
+
+Package-specific documentation should help you get started with contributions for specific packages. Below we provide a few general pointers that apply universally.
+
+1. **Code Styl**: Where applicable we use automated tests for linting. To apply styling locally, simply run `using JuliaFormatter; JuliaFormatter.format(".")` from an interactive Julia session in the root folder of the project.
+2. **Documentation Rendering**: For many of our packages, we use [Quarto](https://quarto.org/) in combination with Documenter.jl for documentation purposes. This has a few perks but it currently relies on locally rendering the docs to incorporate updates. This will be automated in the future. In the meantime, please just open an issue of reach out to us on the Julia slack (#taija channel) in case of any issues.
+3. **Testing**: Please make sure to add units tests for any new functionality that you add. 
 
 ## 🙏 Sponsors
 
