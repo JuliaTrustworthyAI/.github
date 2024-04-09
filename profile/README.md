@@ -1,4 +1,5 @@
 
+
 <p align="center">
 <img src="https://raw.githubusercontent.com/TrustworthyAIJulia/.github/main/profile/www/wide_logo.png">
 </p>
@@ -21,7 +22,14 @@ Various meta packages can be used to extend the core functionality:
 
 - Plotting ([TaijaPlotting.jl](https://github.com/JuliaTrustworthyAI/TaijaPlotting.jl))
 - Datasets for testing and benchmarking ([TaijaData.jl](https://github.com/JuliaTrustworthyAI/TaijaData.jl))
+- Parallelization ([TaijaParallel.jl](https://github.com/JuliaTrustworthyAI/TaijaParallel.jl))
 - Interoperability with other programming languages ([TaijaInteroperability.jl](https://github.com/JuliaTrustworthyAI/TaijaInteroperability.jl))
+
+The [TaijaBase.jl](https://github.com/JuliaTrustworthyAI/TaijaBase.jl) package provides common symbols, types and functions that are used across all or multiple Taija packages.
+
+## 📰 News
+
+- **2024-04-09**: Taija is taking part in Google Summer of Code for the first time! We are excited to mentor students on various projects related to Trustworthy AI in Julia. Find the list of projects [here](https://julialang.org/jsoc/gsoc/taija/).
 
 ## 👐 Contribute
 
@@ -54,9 +62,12 @@ Some of Taija’s contributors have been partially or fully funded by one or mor
 
 Taija has been used in the following publications:
 
-- *Faithful Model Explanations through Energy-Constrained Conformal Counterfactuals* (upcoming at [AAAI 2024](https://aaai.org/aaai-conference/aaai-24-technical-program/)).
-- *Explaining Black-Box Models through Counterfactuals* (Altmeyer, Deursen, and Liem 2023) published in [JuliaCon Proceedings](https://proceedings.juliacon.org/papers/10.21105/jcon.00130).
-- *Endogenous Macrodynamics in Algorithmic Recourse* (Altmeyer et al. 2023) presented at [IEEE SaTML 2023](https://satml.org/2023/accepted-papers/).
+- *Conformal Intent Classification and Clarification for Fast and Accurate Intent Recognition* (Hengst et al. 2024) [upcoming](https://arxiv.org/abs/2403.18973) in ACL’s NAACL Findings 2024[^1].
+- *Faithful Model Explanations through Energy-Constrained Conformal Counterfactuals* (Altmeyer et al. 2024) [published](https://ojs.aaai.org/index.php/AAAI/article/view/28956) in Proceedings of the AAAI Conference on Artificial Intelligence 2024.
+- *Explaining Black-Box Models through Counterfactuals* (Altmeyer, Deursen, et al. 2023) [published](https://proceedings.juliacon.org/papers/10.21105/jcon.00130) in JuliaCon Proceedings.
+- *Endogenous Macrodynamics in Algorithmic Recourse* (Altmeyer et al. 2023) [published](https://ieeexplore.ieee.org/abstract/document/10136130) in Proceedings of the 2023 IEEE Conference on Secure and Trustworthy Machine Learning (SaTML).
+
+If you have used Taija in your research, please let us know so we can add your publication to the list.
 
 ## 🔗 Related Software
 
@@ -76,7 +87,7 @@ Taija stands for **T**rustworthy **A**rtificial **I**ntelligence in **J**uli**a*
 
 ## 🎓 References
 
-<div id="refs" class="references csl-bib-body hanging-indent">
+<div id="refs" class="references csl-bib-body hanging-indent" entry-spacing="0">
 
 <div id="ref-altmeyer2023endogenous" class="csl-entry">
 
@@ -86,7 +97,19 @@ Altmeyer, Patrick, Giovan Angela, Aleksander Buszydlik, Karol Dobiczek, Arie van
 
 <div id="ref-altmeyer2023explaining" class="csl-entry">
 
-Altmeyer, Patrick, Arie van Deursen, and Cynthia Liem. 2023. “Explaining Black-Box Models Through Counterfactuals.” *arXiv Preprint arXiv:2308.07198*.
+Altmeyer, Patrick, Arie van Deursen, et al. 2023. “Explaining Black-Box Models Through Counterfactuals.” In *Proceedings of the JuliaCon Conferences*, 1:130. 1.
+
+</div>
+
+<div id="ref-altmeyer2024faithful" class="csl-entry">
+
+Altmeyer, Patrick, Mojtaba Farmanbar, Arie van Deursen, and Cynthia CS Liem. 2024. “Faithful Model Explanations Through Energy-Constrained Conformal Counterfactuals.” In *Proceedings of the AAAI Conference on Artificial Intelligence*, 38:10829–37. 10.
+
+</div>
+
+<div id="ref-hengst2024conformal" class="csl-entry">
+
+Hengst, Floris den, Ralf Wolter, Patrick Altmeyer, and Arda Kaygan. 2024. “Conformal Intent Classification and Clarification for Fast and Accurate Intent Recognition.” <https://arxiv.org/abs/2403.18973>.
 
 </div>
 
@@ -94,4 +117,6 @@ Altmeyer, Patrick, Arie van Deursen, and Cynthia Liem. 2023. “Explaining Black
 
 ## 📬 Contact
 
-You can find @pat-alt’s socials and contact details on his website: [www.paltmeyer.com](www.paltmeyer.com).
+Probably the easiest way is to join the [JuliaLang Slack](https://julialang.org/slack/) and join our \#taija channel. You can also post a GitHub Issue on our organization [repo](https://github.com/JuliaTrustworthyAI/.github/issues). You can find @pat-alt’s socials and contact details on his website: [www.paltmeyer.com](www.paltmeyer.com).
+
+[^1]: Experiments were run in parallel using Python’s MAPIE and ConformalPrediction.jl, in order to cross-check results. Reported results were produced using MAPIE.

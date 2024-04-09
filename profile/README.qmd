@@ -28,7 +28,14 @@ Various meta packages can be used to extend the core functionality:
 
 - Plotting ([TaijaPlotting.jl](https://github.com/JuliaTrustworthyAI/TaijaPlotting.jl))
 - Datasets for testing and benchmarking ([TaijaData.jl](https://github.com/JuliaTrustworthyAI/TaijaData.jl))
+- Parallelization ([TaijaParallel.jl](https://github.com/JuliaTrustworthyAI/TaijaParallel.jl))
 - Interoperability with other programming languages ([TaijaInteroperability.jl](https://github.com/JuliaTrustworthyAI/TaijaInteroperability.jl))
+
+The [TaijaBase.jl](https://github.com/JuliaTrustworthyAI/TaijaBase.jl) package provides common symbols, types and functions that are used across all or multiple Taija packages.
+
+## 📰 News 
+
+- **2024-04-09**: Taija is taking part in Google Summer of Code for the first time! We are excited to mentor students on various projects related to Trustworthy AI in Julia. Find the list of projects [here](https://julialang.org/jsoc/gsoc/taija/).
 
 ## 👐 Contribute
 
@@ -60,10 +67,13 @@ Some of Taija's contributors have been partially or fully funded by one or more 
 ## 📚 Research using Taija
 
 Taija has been used in the following publications:
+ 
+- *Conformal Intent Classification and Clarification for Fast and Accurate Intent Recognition* [@hengst2024conformal] [upcoming](https://arxiv.org/abs/2403.18973) in ACL's NAACL Findings 2024^[Experiments were run in parallel using Python's MAPIE and ConformalPrediction.jl, in order to cross-check results. Reported results were produced using MAPIE.].
+- *Faithful Model Explanations through Energy-Constrained Conformal Counterfactuals* [@altmeyer2024faithful] [published](https://ojs.aaai.org/index.php/AAAI/article/view/28956) in Proceedings of the AAAI Conference on Artificial Intelligence 2024.
+- *Explaining Black-Box Models through Counterfactuals* [@altmeyer2023explaining] [published](https://proceedings.juliacon.org/papers/10.21105/jcon.00130) in JuliaCon Proceedings.
+- *Endogenous Macrodynamics in Algorithmic Recourse* [@altmeyer2023endogenous] [published](https://ieeexplore.ieee.org/abstract/document/10136130) in Proceedings of the 2023 IEEE Conference on Secure and Trustworthy Machine Learning (SaTML).
 
-- *Faithful Model Explanations through Energy-Constrained Conformal Counterfactuals* (upcoming at [AAAI 2024](https://aaai.org/aaai-conference/aaai-24-technical-program/)).
-- *Explaining Black-Box Models through Counterfactuals* [@altmeyer2023explaining] published in [JuliaCon Proceedings](https://proceedings.juliacon.org/papers/10.21105/jcon.00130).
-- *Endogenous Macrodynamics in Algorithmic Recourse* [@altmeyer2023endogenous] presented at [IEEE SaTML 2023](https://satml.org/2023/accepted-papers/).
+If you have used Taija in your research, please let us know so we can add your publication to the list. 
 
 ## 🔗 Related Software
 
@@ -88,4 +98,4 @@ Taija stands for **T**rustworthy **A**rtificial **I**ntelligence in **J**uli**a*
 
 ## 📬 Contact
 
-You can find \@pat-alt's socials and contact details on his website: [www.paltmeyer.com](www.paltmeyer.com). 
+Probably the easiest way is to join the [JuliaLang Slack](https://julialang.org/slack/) and join our #taija channel. You can also post a GitHub Issue on our organization [repo](https://github.com/JuliaTrustworthyAI/.github/issues). You can find \@pat-alt's socials and contact details on his website: [www.paltmeyer.com](www.paltmeyer.com). 
