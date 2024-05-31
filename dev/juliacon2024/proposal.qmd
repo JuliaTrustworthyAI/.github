@@ -1,4 +1,10 @@
-
+---
+format: 
+  commonmark:
+    variant: -raw_html+tex_math_dollars
+    wrap: none
+bibliography: bib.bib
+---
 
 ## Abstract
 
@@ -6,9 +12,9 @@
 
 ## Description
 
-Julia’s ecosystem for Artificial Intelligence (AI) and Machine Learning (ML) has been growing at a relatively rapid pace, perhaps most notably so in the [SciML](https://sciml.ai/) domain but also more broadly (e.g. [Flux](https://fluxml.ai/), [MLJ](https://juliaai.github.io/MLJ.jl/stable/), [JuliaGenAI](https://github.com/JuliaGenAI/juliagenai.org), …). The goal of Taija is to make AI models more trustworthy, where we have so far focused primarily on the interplay with packages in the latter category.
+Julia's ecosystem for Artificial Intelligence (AI) and Machine Learning (ML) has been growing at a relatively rapid pace, perhaps most notably so in the [SciML](https://sciml.ai/) domain but also more broadly (e.g. [Flux](https://fluxml.ai/), [MLJ](https://juliaai.github.io/MLJ.jl/stable/), [JuliaGenAI](https://github.com/JuliaGenAI/juliagenai.org), ...). The goal of Taija is to make AI models more trustworthy, where we have so far focused primarily on the interplay with packages in the latter category.
 
-## 🏠 About
+## 🏠 About 
 
 Taija currently covers a range of approaches towards making AI systems more trustworthy:
 
@@ -29,21 +35,21 @@ The [TaijaBase.jl](https://github.com/JuliaTrustworthyAI/TaijaBase.jl) package p
 
 ## 🛠️ Recent Developments
 
-A lot has happened since we presented some of our core packages at JuliaCon in 2022 and 2023. During the past year, the focus has been on extending and improving these existing packages. Various groups of undergraduate students at TU Delft as well as a few external collaborates have contributed to these efforts.
+A lot has happened since we presented some of our core packages at JuliaCon in 2022 and 2023. During the past year, the focus has been on extending and improving these existing packages. Various groups of undergraduate students at TU Delft as well as a few external collaborates have contributed to these efforts. 
 
 ### CounterfactualExplanations.jl
 
-`CounterfactualExplanations.jl` is a package for Counterfactual Explanations and Algorithmic Recourse in Julia.
+`CounterfactualExplanations.jl` is a package for Counterfactual Explanations and Algorithmic Recourse in Julia. 
 
 - The code base has been streamlined to make it more accessible to new contributors. (students)
 - Part of this involved moving functionality out of the package into new meta-packages.
 - Multiple new counterfactual generators including FeatureTweak for decision trees and random forests. (students)
-- Integration of ECCCo generator for faithful model explanations (Altmeyer et al. 2024).
+- Integration of ECCCo generator for faithful model explanations [@altmeyer2024faithful]. 
 - Huge improvements to computational speed and native support for multi-threading and multi-processing.
 
 ### LaplaceRedux.jl
 
-`LaplaceRedux.jl` is a package for effortless Bayesian Deep Learning through Laplace Approximation for `Flux.jl` neural networks.
+`LaplaceRedux.jl` is a package for effortless Bayesian Deep Learning through Laplace Approximation for `Flux.jl` neural networks. 
 
 - Support for multi-class problems. (students)
 - Support for more sophisticated and scalable Hessian approximations. (students)
@@ -53,11 +59,9 @@ A lot has happened since we presented some of our core packages at JuliaCon in 2
 
 Taija has been running two Julia Season of Code projects this summer.
 
-1.  (*Conformal Bayes*) Bridging the gap between Bayesian and frequentist approaches to Predictive Uncertainty Quantification.
-2.  (*Causal Recourse*) From minimal perturbations to minimal interventions for Algorithmic Recourse.
+1. (*Conformal Bayes*) Bridging the gap between Bayesian and frequentist approaches to Predictive Uncertainty Quantification.
+2. (*Causal Recourse*) From minimal perturbations to minimal interventions for Algorithmic Recourse.
 
 Finally, we are also working with a group of students on [TaijaInteractive.jl](https://github.com/JuliaTrustworthyAI/TaijaInteractive.jl): a Genie-based web application for interactive model explanations.
 
 ## 📚 References
-
-Altmeyer, Patrick, Mojtaba Farmanbar, Arie van Deursen, and Cynthia CS Liem. 2024. “Faithful Model Explanations Through Energy-Constrained Conformal Counterfactuals.” In *Proceedings of the AAAI Conference on Artificial Intelligence*, 38:10829–37. 10.
