@@ -36,8 +36,9 @@ A lot has happened since we presented some of our core packages at JuliaCon in 2
 `CounterfactualExplanations.jl` is a package for Counterfactual Explanations and Algorithmic Recourse in Julia.
 
 - The code base has been streamlined to make it more accessible to new contributors. (students)
-- Part of this involved moving functionality out of the package into new meta-packages.
+- Part of this involved moving functionality out of the package into new meta-packages. (students)
 - Multiple new counterfactual generators including FeatureTweak for decision trees and random forests. (students)
+- Improved interoperability with Python and R through `TaijaInteroperability.jl`. (students)
 - Integration of ECCCo generator for faithful model explanations (Altmeyer et al. 2024).
 - Huge improvements to computational speed and native support for multi-threading and multi-processing.
 
@@ -48,6 +49,10 @@ A lot has happened since we presented some of our core packages at JuliaCon in 2
 - Support for multi-class problems. (students)
 - Support for more sophisticated and scalable Hessian approximations. (students)
 - Interface to MLJ for easy model training and evaluation. (students)
+
+### Students’ Experience
+
+I will also briefly report back on the students’ experience working on these projects. This includes the challenges they faced, the skills they acquired, and the impact they had on the Taija ecosystem.
 
 ## 🎯 Ongoing and Future Projects
 
@@ -61,3 +66,6 @@ Finally, we are also working with a group of students on [TaijaInteractive.jl](h
 ## 📚 References
 
 Altmeyer, Patrick, Mojtaba Farmanbar, Arie van Deursen, and Cynthia CS Liem. 2024. “Faithful Model Explanations Through Energy-Constrained Conformal Counterfactuals.” In *Proceedings of the AAAI Conference on Artificial Intelligence*, 38:10829–37. 10.
+
+<!-- Programming in Julia has definitely helped us become better programmers: the languages we usually used during our bachelor's courses were either ones that strongly encourage imperative programming (Java, Python) or ones that strongly encourage functional programming (Haskell, Scala). Julia, in my opinion, tries to take a middle road between those languages, and the programming patterns that emerge from this design choice were cool to learn about.
+Building an early-stage package in a relatively new language was also an interesting experience: there was a lot more trial and error compared to our usual programming projects, and it was sometimes hard to find the information that would help us find the right approach. However, whenever we had such questions and asked them from the wider Julia community, there were always people ready to help in my experience, which was nice. -->

@@ -71,5 +71,8 @@ Finally, we are also working with a group of students on [TaijaInteractive.jl](h
 
 ## 📚 References
 
+::: {#refs}
+:::
+
 <!-- Programming in Julia has definitely helped us become better programmers: the languages we usually used during our bachelor's courses were either ones that strongly encourage imperative programming (Java, Python) or ones that strongly encourage functional programming (Haskell, Scala). Julia, in my opinion, tries to take a middle road between those languages, and the programming patterns that emerge from this design choice were cool to learn about.
 Building an early-stage package in a relatively new language was also an interesting experience: there was a lot more trial and error compared to our usual programming projects, and it was sometimes hard to find the information that would help us find the right approach. However, whenever we had such questions and asked them from the wider Julia community, there were always people ready to help in my experience, which was nice. -->
