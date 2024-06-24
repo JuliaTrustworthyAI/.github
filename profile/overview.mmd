@@ -1,0 +1,33 @@
+flowchart TB
+
+    classDef taija fill:#389836,stroke:#333,color:#fff;
+    classDef core fill:#CB3C33,stroke:#333,color:#fff;
+    classDef base fill:#9558B2,stroke:#333,color:#fff;
+
+    %% Base
+    base["TaijaBase.jl"]
+
+    %% Meta
+    interop["TaijaInteroperability.jl"]
+    data["TaijaData.jl"]
+    parallel["TaijaParallel.jl"]
+    plotting["TaijaPlotting.jl"]
+
+    %% Core
+    ce["CounterfactualExplanations.jl"]
+    cp["ConformalPrediction.jl"]
+    lr["LaplaceRedux.jl"]
+    jem["JointEnergyModels.jl"]
+
+    class base base;
+    class interop,data,parallel,plotting taija;
+    class ce,cp,lr,jem core;
+
+    %% Graph
+    subgraph "Meta Packages"
+        data & plotting & parallel & interop
+    end
+
+    subgraph "Core Packages"
+        ce & cp & lr & jem
+    end
