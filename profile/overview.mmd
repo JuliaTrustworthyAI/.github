@@ -1,3 +1,18 @@
+%%{
+  init: {
+    'theme': 'base',
+    'themeVariables': {
+      'primaryColor': '#BB2528',
+      'primaryTextColor': '#fff',
+      'primaryBorderColor': '#7C0000',
+      'lineColor': '#F8B229',
+      'secondaryColor': '#006100',
+      'tertiaryColor': '#e9edfb',
+      'fontFamily': "avenir"
+    }
+  }
+}%%
+
 flowchart TB
 
     classDef taija fill:#389836,stroke:#333,color:#fff;
@@ -15,13 +30,14 @@ flowchart TB
 
     %% Core
     ce["CounterfactualExplanations.jl"]
+    ar["AlgorithmiRecourseDynamics.jl"]
     cp["ConformalPrediction.jl"]
     lr["LaplaceRedux.jl"]
     jem["JointEnergyModels.jl"]
 
     class base base;
     class interop,data,parallel,plotting taija;
-    class ce,cp,lr,jem core;
+    class ce,cp,lr,jem,ar core;
 
     %% Graph
     subgraph "Meta Packages"
@@ -29,5 +45,5 @@ flowchart TB
     end
 
     subgraph "Core Packages"
-        ce & cp & lr & jem
+        ce & cp & lr & jem & ar
     end

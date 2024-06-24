@@ -27,6 +27,58 @@ Various meta packages can be used to extend the core functionality:
 
 The [TaijaBase.jl](https://github.com/JuliaTrustworthyAI/TaijaBase.jl) package provides common symbols, types and functions that are used across all or multiple Taija packages.
 
+``` mermaid
+%%{
+  init: {
+    'theme': 'base',
+    'themeVariables': {
+      'primaryColor': '#BB2528',
+      'primaryTextColor': '#fff',
+      'primaryBorderColor': '#7C0000',
+      'lineColor': '#F8B229',
+      'secondaryColor': '#006100',
+      'tertiaryColor': '#e9edfb',
+      'fontFamily': "avenir"
+    }
+  }
+}%%
+
+flowchart TB
+
+    classDef taija fill:#389836,stroke:#333,color:#fff;
+    classDef core fill:#CB3C33,stroke:#333,color:#fff;
+    classDef base fill:#9558B2,stroke:#333,color:#fff;
+
+    %% Base
+    base["TaijaBase.jl"]
+
+    %% Meta
+    interop["TaijaInteroperability.jl"]
+    data["TaijaData.jl"]
+    parallel["TaijaParallel.jl"]
+    plotting["TaijaPlotting.jl"]
+
+    %% Core
+    ce["CounterfactualExplanations.jl"]
+    ar["AlgorithmiRecourseDynamics.jl"]
+    cp["ConformalPrediction.jl"]
+    lr["LaplaceRedux.jl"]
+    jem["JointEnergyModels.jl"]
+
+    class base base;
+    class interop,data,parallel,plotting taija;
+    class ce,cp,lr,jem,ar core;
+
+    %% Graph
+    subgraph "Meta Packages"
+        data & plotting & parallel & interop
+    end
+
+    subgraph "Core Packages"
+        ce & cp & lr & jem & ar
+    end
+```
+
 ## 📰 News
 
 - **2024-04-09**: Taija is taking part in Google Summer of Code for the first time! We are excited to mentor students on various projects related to Trustworthy AI in Julia. Find the list of projects [here](https://julialang.org/jsoc/gsoc/taija/).
@@ -35,17 +87,9 @@ The [TaijaBase.jl](https://github.com/JuliaTrustworthyAI/TaijaBase.jl) package p
 
 We welcome contributions of any kind. If you want to get involved or use our software for or project, please feel free to reach out. If you have questions, comments or issues related to specific packages, please feel free to open issues or discussions on the respective repository.
 
-### Working on related projects?
+#### Working on related projects?
 
 Are you working on a Julia package that would fit well into this organization? Or do you perhaps have ideas for future projects? We’d love to hear about it, so please do get in touch!
-
-### General Pointers for Contributors
-
-Package-specific documentation should help you get started with contributions for specific packages. Below we provide a few general pointers that apply universally.
-
-1. **Code Styl**: Where applicable we use automated tests for linting. To apply styling locally, simply run `using JuliaFormatter; JuliaFormatter.format(".")` from an interactive Julia session in the root folder of the project.
-2. **Documentation Rendering**: For many of our packages, we use [Quarto](https://quarto.org/) in combination with Documenter.jl for documentation purposes. This has a few perks but it currently relies on locally rendering the docs to incorporate updates. This will be automated in the future. In the meantime, please just open an issue of reach out to us on the Julia slack (#taija channel) in case of any issues.
-3. **Testing**: Please make sure to add units tests for any new functionality that you add. 
 
 ## 🙏 Sponsors
 

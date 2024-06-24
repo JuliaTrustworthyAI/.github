@@ -33,6 +33,12 @@ Various meta packages can be used to extend the core functionality:
 
 The [TaijaBase.jl](https://github.com/JuliaTrustworthyAI/TaijaBase.jl) package provides common symbols, types and functions that are used across all or multiple Taija packages.
 
+```{mermaid}
+%%| label: fig-overview
+%%| fig-cap: "An overview of the Taija ecosystem."
+%%| file: overview.mmd 
+```
+
 ## 📰 News 
 
 - **2024-04-09**: Taija is taking part in Google Summer of Code for the first time! We are excited to mentor students on various projects related to Trustworthy AI in Julia. Find the list of projects [here](https://julialang.org/jsoc/gsoc/taija/).
