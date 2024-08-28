@@ -26,6 +26,14 @@ $footer-bg: lighten($primary, 45%);
 
 // Carousel
 .carousel img {
-    width: 70%;
+    width: 150px;
+    height: 150px;
+    max-width: 70%;
     margin-bottom: 110px;
+    background-color: lighten($primary, 45%);
+}
+
+.carousel .carousel-control-prev-icon, 
+.carousel .carousel-control-next-icon {
+  margin-bottom: 110px;
 }

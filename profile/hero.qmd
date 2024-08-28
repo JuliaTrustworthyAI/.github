@@ -1,27 +1,22 @@
-# Trustworthy Artificial Intelligence in Julia
-
-Taija is the organization that hosts software geared towards **T**rustworthy **A**rtificial **I**ntelligence in **J**uli**a**.
-
 ::: {.hero-banner}
 
-::: {.column-screen}
+::: {.column-page}
 
 ::: {.grid}
 
 ::: {.g-col-8}
+# Taija
 
-![](https://raw.githubusercontent.com/TrustworthyAIJulia/.github/main/profile/www/wide_logo.png){width=100% align="center"}
+### Trustworthy Artificial Intelligence in Julia
 
+Taija is the organization that hosts software geared towards **T**rustworthy **A**rtificial **I**ntelligence in **J**uli**a**.
 :::
 
 ::: {.g-col-4}
-
 {{< include content/news/news.qmd >}}
-
 :::
 
 :::
-
 
 ::: 
 

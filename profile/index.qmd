@@ -1,11 +1,15 @@
 ---
 toc: false
+page-layout: custom
+css: index.css
 ---
 
 {{< include hero.qmd >}}
+
+::: {.content-block}
 
 {{< include content/contribute.qmd >}}
 
 {{< include content/contact.qmd >}}
 
-hi
+:::
