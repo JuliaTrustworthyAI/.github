@@ -16,7 +16,7 @@ website:
       - href: index.qmd
         text: Home
       - text: About
-        href: about.qmd
+        href: content/about.qmd
     right:
       - icon: github
         href: https://github.com/JuliaTrustworthyAI

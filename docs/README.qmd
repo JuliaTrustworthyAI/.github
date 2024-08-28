@@ -5,4 +5,4 @@ format:
 bibliography: bib.bib
 ---
 
-{{< include about.qmd >}}
+{{< include content/about.qmd >}}

@@ -1,3 +1,0 @@
-## News 
-
-- **2024-04-09**: Taija is taking part in Google Summer of Code for the first time! We are excited to mentor students on various projects related to Trustworthy AI in Julia. Find the list of projects [here](https://julialang.org/jsoc/gsoc/taija/).

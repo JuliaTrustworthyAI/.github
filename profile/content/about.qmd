@@ -20,7 +20,7 @@ The [TaijaBase.jl](https://github.com/JuliaTrustworthyAI/TaijaBase.jl) package p
 ```{mermaid}
 %%| label: fig-overview
 %%| fig-cap: "An overview of the Taija ecosystem."
-%%| file: overview.mmd 
+%%| file: /www/overview.mmd 
 ```
 
 > Why *Taija*?

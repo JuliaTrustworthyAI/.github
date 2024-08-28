@@ -1,16 +1,11 @@
 ---
-title: Taija
-subtitle: Trustworthy Artificial Intelligence in Julia
 toc: false
 ---
 
-Taija is the organization that hosts software geared towards **T**rustworthy **A**rtificial **I**ntelligence in **J**uli**a**.
+{{< include hero.qmd >}}
 
-![](https://raw.githubusercontent.com/TrustworthyAIJulia/.github/main/profile/www/wide_logo.png){width=100% align="center"}
+{{< include content/contribute.qmd >}}
 
-{{< include news.qmd >}}
+{{< include content/contact.qmd >}}
 
-{{< include contribute.qmd >}}
-
-{{< include contact.qmd >}}
-
+hi

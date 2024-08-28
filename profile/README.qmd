@@ -5,19 +5,19 @@ format:
 bibliography: bib.bib
 ---
 
-{{< include about.qmd >}}
+{{< include content/about.qmd >}}
 
-{{< include news.qmd >}}
+{{< include content/news.qmd >}}
 
-{{< include contribute.qmd >}}
+{{< include content/contribute.qmd >}}
 
-{{< include research.qmd >}}
+{{< include content/content/research.qmd >}}
 
-{{< include sponsors.qmd >}}
+{{< include content/sponsors.qmd >}}
 
-{{< include related.qmd >}}
+{{< include content/related.qmd >}}
 
-{{< include contact.qmd >}}
+{{< include content/contact.qmd >}}
 
 ## 🎓 References
 

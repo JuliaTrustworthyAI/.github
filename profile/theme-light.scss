@@ -10,3 +10,22 @@ $navbar-bg: lighten($primary, 45%);
 
 // Footer
 $footer-bg: lighten($primary, 45%);
+
+// Hero banner 
+.hero-banner {
+    position: relative;
+    background-color: lighten($primary, 40%);
+    display: flex;
+    justify-content: center;
+}
+  
+.hero-banner h1 {
+    color: #4063D8;
+    font-size: 3.5rem;
+}
+
+// Carousel
+.carousel img {
+    width: 70%;
+    margin-bottom: 110px;
+}
