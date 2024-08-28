@@ -1,0 +1,21 @@
+project:
+  type: website
+  output-dir: build
+  execute-dir: project
+
+website:
+  title: "Taija"
+  navbar:
+    left:
+      - href: index.qmd
+        text: Home
+      - about.qmd
+
+format:
+  html:
+    theme: cosmo
+    css: styles.css
+    toc: true
+
+
+
