@@ -1,0 +1,15 @@
+**.CondaPkg/
+/blog/posts/conformal-llm/simple_inductive.jls
+
+/.quarto/
+/dev/private/
+
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+.DS_Store
+
+/.luarc.json
+
+
