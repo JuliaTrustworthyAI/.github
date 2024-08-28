@@ -1,7 +1,16 @@
 ---
-title: "Taija"
+title: Taija
+subtitle: Trustworthy Artificial Intelligence in Julia
+toc: false
 ---
 
-This is a Quarto website.
+Taija is the organization that hosts software geared towards **T**rustworthy **A**rtificial **I**ntelligence in **J**uli**a**.
 
-To learn more about Quarto websites visit <https://quarto.org/docs/websites>.
+![](https://raw.githubusercontent.com/TrustworthyAIJulia/.github/main/profile/www/wide_logo.png){width=100% align="center"}
+
+{{< include news.qmd >}}
+
+{{< include contribute.qmd >}}
+
+{{< include contact.qmd >}}
+

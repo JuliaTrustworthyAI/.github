@@ -1,14 +1,6 @@
 
 
-<p align="center">
-<img src="https://raw.githubusercontent.com/TrustworthyAIJulia/.github/main/profile/www/wide_logo.png">
-</p>
-
-# Trustworthy Artificial Intelligence in Julia
-
-Taija is the organization that hosts software geared towards **T**rustworthy **A**rtificial **I**ntelligence in **J**uli**a**.
-
-## 🏠 About
+## About
 
 Taija currently covers a range of approaches towards making AI systems more trustworthy:
 
@@ -79,11 +71,15 @@ flowchart TB
     end
 ```
 
-## 📰 News
+> Why *Taija*?
+
+Taija stands for **T**rustworthy **A**rtificial **I**ntelligence in **J**uli**a**. When thinking about a logo that embodies trustworthiness, we quickly landed on 🐶.
+
+## News
 
 - **2024-04-09**: Taija is taking part in Google Summer of Code for the first time! We are excited to mentor students on various projects related to Trustworthy AI in Julia. Find the list of projects [here](https://julialang.org/jsoc/gsoc/taija/).
 
-## 👐 Contribute
+## Contribute
 
 We welcome contributions of any kind. If you want to get involved or use our software for or project, please feel free to reach out. If you have questions, comments or issues related to specific packages, please feel free to open issues or discussions on the respective repository.
 
@@ -91,7 +87,18 @@ We welcome contributions of any kind. If you want to get involved or use our sof
 
 Are you working on a Julia package that would fit well into this organization? Or do you perhaps have ideas for future projects? We’d love to hear about it, so please do get in touch!
 
-## 🙏 Sponsors
+## Research using Taija
+
+Taija has been used in the following publications:
+
+- *Conformal Intent Classification and Clarification for Fast and Accurate Intent Recognition* (Hengst et al. 2024) [upcoming](https://arxiv.org/abs/2403.18973) in ACL’s NAACL Findings 2024[^1].
+- *Faithful Model Explanations through Energy-Constrained Conformal Counterfactuals* (Altmeyer et al. 2024) [published](https://ojs.aaai.org/index.php/AAAI/article/view/28956) in Proceedings of the AAAI Conference on Artificial Intelligence 2024.
+- *Explaining Black-Box Models through Counterfactuals* (Altmeyer, Deursen, et al. 2023) [published](https://proceedings.juliacon.org/papers/10.21105/jcon.00130) in JuliaCon Proceedings.
+- *Endogenous Macrodynamics in Algorithmic Recourse* (Altmeyer et al. 2023) [published](https://ieeexplore.ieee.org/abstract/document/10136130) in Proceedings of the 2023 IEEE Conference on Secure and Trustworthy Machine Learning (SaTML).
+
+If you have used Taija in your research, please let us know so we can add your publication to the list.
+
+## Sponsors
 
 Some of Taija’s contributors have been partially or fully funded by one or more of the following entities:
 
@@ -110,18 +117,7 @@ Some of Taija’s contributors have been partially or fully funded by one or mor
 </tr>
 </table>
 
-## 📚 Research using Taija
-
-Taija has been used in the following publications:
-
-- *Conformal Intent Classification and Clarification for Fast and Accurate Intent Recognition* (Hengst et al. 2024) [upcoming](https://arxiv.org/abs/2403.18973) in ACL’s NAACL Findings 2024[^1].
-- *Faithful Model Explanations through Energy-Constrained Conformal Counterfactuals* (Altmeyer et al. 2024) [published](https://ojs.aaai.org/index.php/AAAI/article/view/28956) in Proceedings of the AAAI Conference on Artificial Intelligence 2024.
-- *Explaining Black-Box Models through Counterfactuals* (Altmeyer, Deursen, et al. 2023) [published](https://proceedings.juliacon.org/papers/10.21105/jcon.00130) in JuliaCon Proceedings.
-- *Endogenous Macrodynamics in Algorithmic Recourse* (Altmeyer et al. 2023) [published](https://ieeexplore.ieee.org/abstract/document/10136130) in Proceedings of the 2023 IEEE Conference on Secure and Trustworthy Machine Learning (SaTML).
-
-If you have used Taija in your research, please let us know so we can add your publication to the list.
-
-## 🔗 Related Software
+## Related Software
 
 Our packages are currently tailored towards the following larger package ecosystems for AI and machine learning in Julia:
 
@@ -133,9 +129,9 @@ Other external packages and ecosystems related to Trustworthy AI in Julia includ
 - [Julia-XAI](https://github.com/Julia-XAI)
 - [ShapML.jl](https://github.com/nredell/ShapML.jl)
 
-## 🐶 Taija?
+## Contact
 
-Taija stands for **T**rustworthy **A**rtificial **I**ntelligence in **J**uli**a**. When thinking about a logo that embodies trustworthiness, we quickly landed on 🐶.
+Probably the easiest way is to join the [JuliaLang Slack](https://julialang.org/slack/) and join our \#taija channel. You can also post a GitHub Issue on our organization [repo](https://github.com/JuliaTrustworthyAI/.github/issues). You can find @pat-alt’s socials and contact details on his website: [www.paltmeyer.com](www.paltmeyer.com).
 
 ## 🎓 References
 
@@ -166,9 +162,5 @@ Hengst, Floris den, Ralf Wolter, Patrick Altmeyer, and Arda Kaygan. 2024. “Con
 </div>
 
 </div>
-
-## 📬 Contact
-
-Probably the easiest way is to join the [JuliaLang Slack](https://julialang.org/slack/) and join our \#taija channel. You can also post a GitHub Issue on our organization [repo](https://github.com/JuliaTrustworthyAI/.github/issues). You can find @pat-alt’s socials and contact details on his website: [www.paltmeyer.com](www.paltmeyer.com).
 
 [^1]: Experiments were run in parallel using Python’s MAPIE and ConformalPrediction.jl, in order to cross-check results. Reported results were produced using MAPIE.
