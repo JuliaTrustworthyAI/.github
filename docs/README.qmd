@@ -1,0 +1,8 @@
+---
+format: 
+    gfm:
+        wrap: preserve
+bibliography: bib.bib
+---
+
+{{< include about.qmd >}}

@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>About – Taija</title>
+<title>about</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -30,6 +30,7 @@ ul.task-list li input[type="checkbox"] {
 <script src="site_libs/quarto-search/fuse.min.js"></script>
 <script src="site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="./">
+<link href="./www/favicon.ico" rel="icon">
 <script src="site_libs/quarto-html/quarto.js"></script>
 <script src="site_libs/quarto-html/popper.min.js"></script>
 <script src="site_libs/quarto-html/tippy.umd.min.js"></script>
@@ -66,6 +67,9 @@ ul.task-list li input[type="checkbox"] {
     "search-label": "Search"
   }
 }</script>
+<script src="site_libs/quarto-diagram/mermaid.min.js"></script>
+<script src="site_libs/quarto-diagram/mermaid-init.js"></script>
+<link href="site_libs/quarto-diagram/mermaid.css" rel="stylesheet">
 
 
 <link rel="stylesheet" href="styles.css">
@@ -78,8 +82,8 @@ ul.task-list li input[type="checkbox"] {
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
-    <a class="navbar-brand" href="./index.html">
-    <span class="navbar-title">Taija</span>
+    <a href="./index.html" class="navbar-brand navbar-brand-logo">
+    <img src="./www/logo_close.png" alt="" class="navbar-logo">
     </a>
   </div>
             <div id="quarto-search" class="" title="Search"></div>
@@ -97,6 +101,13 @@ ul.task-list li input[type="checkbox"] {
 <span class="menu-text">About</span></a>
   </li>  
 </ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/JuliaTrustworthyAI"> <i class="bi bi-github" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
           </div> <!-- /navcollapse -->
             <div class="quarto-navbar-tools">
 </div>
@@ -107,34 +118,110 @@ ul.task-list li input[type="checkbox"] {
 <div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
-        
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#about" id="toc-about" class="nav-link active" data-scroll-target="#about">About</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/JuliaTrustworthyAI/.github/issues/new" class="toc-action"><i class="bi bi-github"></i>Report an issue</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
-<header id="title-block-header" class="quarto-title-block default">
-<div class="quarto-title">
-<h1 class="title">About</h1>
+
+
+
+<section id="about" class="level2">
+<h2 class="anchored" data-anchor-id="about">About</h2>
+<p>Taija currently covers a range of approaches towards making AI systems more trustworthy:</p>
+<ul>
+<li>Model Explainability (<a href="https://github.com/JuliaTrustworthyAI/CounterfactualExplanations.jl">CounterfactualExplanations.jl</a>)</li>
+<li>Algorithmic Recourse (<a href="https://github.com/JuliaTrustworthyAI/CounterfactualExplanations.jl">CounterfactualExplanations.jl</a>, <a href="https://github.com/JuliaTrustworthyAI/AlgorithmicRecourseDynamics.jl">AlgorithmicRecourseDynamics.jl</a>)</li>
+<li>Predictive Uncertainty Quantification (<a href="https://github.com/JuliaTrustworthyAI/ConformalPrediction.jl">ConformalPrediction.jl</a>, <a href="https://github.com/JuliaTrustworthyAI/LaplaceRedux.jl">LaplaceRedux.jl</a>)</li>
+<li>Effortless Bayesian Deep Learning (<a href="https://github.com/JuliaTrustworthyAI/LaplaceRedux.jl">LaplaceRedux.jl</a>)</li>
+<li>Hybrid Learning (<a href="https://github.com/JuliaTrustworthyAI/JointEnergyModels.jl">JointEnergyModels.jl</a>)</li>
+</ul>
+<p>Various meta packages can be used to extend the core functionality:</p>
+<ul>
+<li>Plotting (<a href="https://github.com/JuliaTrustworthyAI/TaijaPlotting.jl">TaijaPlotting.jl</a>)</li>
+<li>Datasets for testing and benchmarking (<a href="https://github.com/JuliaTrustworthyAI/TaijaData.jl">TaijaData.jl</a>)</li>
+<li>Parallelization (<a href="https://github.com/JuliaTrustworthyAI/TaijaParallel.jl">TaijaParallel.jl</a>)</li>
+<li>Interoperability with other programming languages (<a href="https://github.com/JuliaTrustworthyAI/TaijaInteroperability.jl">TaijaInteroperability.jl</a>)</li>
+</ul>
+<p>The <a href="https://github.com/JuliaTrustworthyAI/TaijaBase.jl">TaijaBase.jl</a> package provides common symbols, types and functions that are used across all or multiple Taija packages.</p>
+<div class="cell" data-file="overview.mmd" data-layout-align="default">
+<div class="cell-output-display">
+<div id="fig-overview" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-overview-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div>
+<pre class="mermaid mermaid-js" data-label="fig-overview">%%{
+  init: {
+    'theme': 'base',
+    'themeVariables': {
+      'primaryColor': '#BB2528',
+      'primaryTextColor': '#fff',
+      'primaryBorderColor': '#7C0000',
+      'lineColor': '#F8B229',
+      'secondaryColor': '#006100',
+      'tertiaryColor': '#e9edfb',
+      'fontFamily': "avenir"
+    }
+  }
+}%%
+
+flowchart TB
+
+    classDef taija fill:#389836,stroke:#333,color:#fff;
+    classDef core fill:#CB3C33,stroke:#333,color:#fff;
+    classDef base fill:#9558B2,stroke:#333,color:#fff;
+
+    %% Base
+    base["TaijaBase.jl"]
+
+    %% Meta
+    interop["TaijaInteroperability.jl"]
+    data["TaijaData.jl"]
+    parallel["TaijaParallel.jl"]
+    plotting["TaijaPlotting.jl"]
+
+    %% Core
+    ce["CounterfactualExplanations.jl"]
+    ar["AlgorithmiRecourseDynamics.jl"]
+    cp["ConformalPrediction.jl"]
+    lr["LaplaceRedux.jl"]
+    jem["JointEnergyModels.jl"]
+
+    class base base;
+    class interop,data,parallel,plotting taija;
+    class ce,cp,lr,jem,ar core;
+
+    %% Graph
+    subgraph "Meta Packages"
+        data &amp; plotting &amp; parallel &amp; interop
+    end
+
+    subgraph "Core Packages"
+        ce &amp; cp &amp; lr &amp; jem &amp; ar
+    end</pre>
 </div>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-overview-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: An overview of the Taija ecosystem.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<blockquote class="blockquote">
+<p>Why <em>Taija</em>?</p>
+</blockquote>
+<p>Taija stands for <strong>T</strong>rustworthy <strong>A</strong>rtificial <strong>I</strong>ntelligence in <strong>J</strong>uli<strong>a</strong>. When thinking about a logo that embodies trustworthiness, we quickly landed on 🐶.</p>
 
 
-
-<div class="quarto-title-meta">
-
-    
-  
-    
-  </div>
-  
-
-
-</header>
-
-
-<p>About this site</p>
-
-
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
@@ -229,7 +316,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
   }
     var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
     var mailtoRegex = new RegExp(/^mailto:/);
-      var filterRegex = new RegExp('/' + window.location.host + '/');
+      var filterRegex = new RegExp("https:\/\/www\.taija\.org\/");
     var isInternal = (href) => {
         return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
     }
@@ -558,6 +645,32 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 });
 </script>
 </div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p><a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" class="img-fluid" alt="License: MIT"></a> <a href="http://creativecommons.org/licenses/by/4.0/"><img src="https://img.shields.io/badge/License-CC%20BY%204.0-lightgrey.svg" class="img-fluid" alt="CC BY 4.0"></a> © 2024, Taija</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/JuliaTrustworthyAI/.github/issues/new" class="toc-action"><i class="bi bi-github"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://www.taija.org/">
+      <i class="bi bi-house" role="img">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/JuliaTrustworthyAI">
+      <i class="bi bi-github" role="img">
+</i> 
+    </a>
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
 
 
 

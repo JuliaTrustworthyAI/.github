@@ -2,15 +2,225 @@
   {
     "objectID": "about.html",
     "href": "about.html",
-    "title": "About",
+    "title": "",
     "section": "",
-    "text": "About this site"
+    "text": "Taija currently covers a range of approaches towards making AI systems more trustworthy:\n\nModel Explainability (CounterfactualExplanations.jl)\nAlgorithmic Recourse (CounterfactualExplanations.jl, AlgorithmicRecourseDynamics.jl)\nPredictive Uncertainty Quantification (ConformalPrediction.jl, LaplaceRedux.jl)\nEffortless Bayesian Deep Learning (LaplaceRedux.jl)\nHybrid Learning (JointEnergyModels.jl)\n\nVarious meta packages can be used to extend the core functionality:\n\nPlotting (TaijaPlotting.jl)\nDatasets for testing and benchmarking (TaijaData.jl)\nParallelization (TaijaParallel.jl)\nInteroperability with other programming languages (TaijaInteroperability.jl)\n\nThe TaijaBase.jl package provides common symbols, types and functions that are used across all or multiple Taija packages.\n\n\n\n\n\n\n%%{\n  init: {\n    'theme': 'base',\n    'themeVariables': {\n      'primaryColor': '#BB2528',\n      'primaryTextColor': '#fff',\n      'primaryBorderColor': '#7C0000',\n      'lineColor': '#F8B229',\n      'secondaryColor': '#006100',\n      'tertiaryColor': '#e9edfb',\n      'fontFamily': \"avenir\"\n    }\n  }\n}%%\n\nflowchart TB\n\n    classDef taija fill:#389836,stroke:#333,color:#fff;\n    classDef core fill:#CB3C33,stroke:#333,color:#fff;\n    classDef base fill:#9558B2,stroke:#333,color:#fff;\n\n    %% Base\n    base[\"TaijaBase.jl\"]\n\n    %% Meta\n    interop[\"TaijaInteroperability.jl\"]\n    data[\"TaijaData.jl\"]\n    parallel[\"TaijaParallel.jl\"]\n    plotting[\"TaijaPlotting.jl\"]\n\n    %% Core\n    ce[\"CounterfactualExplanations.jl\"]\n    ar[\"AlgorithmiRecourseDynamics.jl\"]\n    cp[\"ConformalPrediction.jl\"]\n    lr[\"LaplaceRedux.jl\"]\n    jem[\"JointEnergyModels.jl\"]\n\n    class base base;\n    class interop,data,parallel,plotting taija;\n    class ce,cp,lr,jem,ar core;\n\n    %% Graph\n    subgraph \"Meta Packages\"\n        data & plotting & parallel & interop\n    end\n\n    subgraph \"Core Packages\"\n        ce & cp & lr & jem & ar\n    end\n\n\n\nFigure 1: An overview of the Taija ecosystem.\n\n\n\n\n\n\nWhy Taija?\n\nTaija stands for Trustworthy Artificial Intelligence in Julia. When thinking about a logo that embodies trustworthiness, we quickly landed on 🐶."
   },
   {
     "objectID": "index.html",
     "href": "index.html",
     "title": "Taija",
     "section": "",
-    "text": "This is a Quarto website.\nTo learn more about Quarto websites visit https://quarto.org/docs/websites."
+    "text": "Taija is the organization that hosts software geared towards Trustworthy Artificial Intelligence in Julia."
+  },
+  {
+    "objectID": "about.html#about",
+    "href": "about.html#about",
+    "title": "",
+    "section": "",
+    "text": "Taija currently covers a range of approaches towards making AI systems more trustworthy:\n\nModel Explainability (CounterfactualExplanations.jl)\nAlgorithmic Recourse (CounterfactualExplanations.jl, AlgorithmicRecourseDynamics.jl)\nPredictive Uncertainty Quantification (ConformalPrediction.jl, LaplaceRedux.jl)\nEffortless Bayesian Deep Learning (LaplaceRedux.jl)\nHybrid Learning (JointEnergyModels.jl)\n\nVarious meta packages can be used to extend the core functionality:\n\nPlotting (TaijaPlotting.jl)\nDatasets for testing and benchmarking (TaijaData.jl)\nParallelization (TaijaParallel.jl)\nInteroperability with other programming languages (TaijaInteroperability.jl)\n\nThe TaijaBase.jl package provides common symbols, types and functions that are used across all or multiple Taija packages.\n\n\n\n\n\n\n%%{\n  init: {\n    'theme': 'base',\n    'themeVariables': {\n      'primaryColor': '#BB2528',\n      'primaryTextColor': '#fff',\n      'primaryBorderColor': '#7C0000',\n      'lineColor': '#F8B229',\n      'secondaryColor': '#006100',\n      'tertiaryColor': '#e9edfb',\n      'fontFamily': \"avenir\"\n    }\n  }\n}%%\n\nflowchart TB\n\n    classDef taija fill:#389836,stroke:#333,color:#fff;\n    classDef core fill:#CB3C33,stroke:#333,color:#fff;\n    classDef base fill:#9558B2,stroke:#333,color:#fff;\n\n    %% Base\n    base[\"TaijaBase.jl\"]\n\n    %% Meta\n    interop[\"TaijaInteroperability.jl\"]\n    data[\"TaijaData.jl\"]\n    parallel[\"TaijaParallel.jl\"]\n    plotting[\"TaijaPlotting.jl\"]\n\n    %% Core\n    ce[\"CounterfactualExplanations.jl\"]\n    ar[\"AlgorithmiRecourseDynamics.jl\"]\n    cp[\"ConformalPrediction.jl\"]\n    lr[\"LaplaceRedux.jl\"]\n    jem[\"JointEnergyModels.jl\"]\n\n    class base base;\n    class interop,data,parallel,plotting taija;\n    class ce,cp,lr,jem,ar core;\n\n    %% Graph\n    subgraph \"Meta Packages\"\n        data & plotting & parallel & interop\n    end\n\n    subgraph \"Core Packages\"\n        ce & cp & lr & jem & ar\n    end\n\n\n\nFigure 1: An overview of the Taija ecosystem.\n\n\n\n\n\n\nWhy Taija?\n\nTaija stands for Trustworthy Artificial Intelligence in Julia. When thinking about a logo that embodies trustworthiness, we quickly landed on 🐶."
+  },
+  {
+    "objectID": "about.html#news",
+    "href": "about.html#news",
+    "title": "Taija",
+    "section": "",
+    "text": "2024-04-09: Taija is taking part in Google Summer of Code for the first time! We are excited to mentor students on various projects related to Trustworthy AI in Julia. Find the list of projects here."
+  },
+  {
+    "objectID": "about.html#contribute",
+    "href": "about.html#contribute",
+    "title": "Taija",
+    "section": "",
+    "text": "We welcome contributions of any kind. If you want to get involved or use our software for or project, please feel free to reach out. If you have questions, comments or issues related to specific packages, please feel free to open issues or discussions on the respective repository.\n\n\nAre you working on a Julia package that would fit well into this organization? Or do you perhaps have ideas for future projects? We’d love to hear about it, so please do get in touch!"
+  },
+  {
+    "objectID": "about.html#sponsors",
+    "href": "about.html#sponsors",
+    "title": "Taija",
+    "section": "",
+    "text": "Some of Taija’s contributors have been partially or fully funded by one or more of the following entities:"
+  },
+  {
+    "objectID": "about.html#research-using-taija",
+    "href": "about.html#research-using-taija",
+    "title": "Taija",
+    "section": "",
+    "text": "Taija has been used in the following publications:\n\nConformal Intent Classification and Clarification for Fast and Accurate Intent Recognition [@hengst2024conformal] upcoming in ACL’s NAACL Findings 20241.\nFaithful Model Explanations through Energy-Constrained Conformal Counterfactuals [@altmeyer2024faithful] published in Proceedings of the AAAI Conference on Artificial Intelligence 2024.\nExplaining Black-Box Models through Counterfactuals [@altmeyer2023explaining] published in JuliaCon Proceedings.\nEndogenous Macrodynamics in Algorithmic Recourse [@altmeyer2023endogenous] published in Proceedings of the 2023 IEEE Conference on Secure and Trustworthy Machine Learning (SaTML).\n\nIf you have used Taija in your research, please let us know so we can add your publication to the list."
+  },
+  {
+    "objectID": "about.html#related-software",
+    "href": "about.html#related-software",
+    "title": "Taija",
+    "section": "",
+    "text": "Our packages are currently tailored towards the following larger package ecosystems for AI and machine learning in Julia:\n\nFluxML\nMLJ\n\nOther external packages and ecosystems related to Trustworthy AI in Julia include:\n\nJulia-XAI\nShapML.jl"
+  },
+  {
+    "objectID": "about.html#taija",
+    "href": "about.html#taija",
+    "title": "Trustworthy Artificial Intelligence in Julia",
+    "section": "🐶 Taija?",
+    "text": "🐶 Taija?\nTaija stands for Trustworthy Artificial Intelligence in Julia. When thinking about a logo that embodies trustworthiness, we quickly landed on 🐶."
+  },
+  {
+    "objectID": "about.html#references",
+    "href": "about.html#references",
+    "title": "Trustworthy Artificial Intelligence in Julia",
+    "section": "🎓 References",
+    "text": "🎓 References"
+  },
+  {
+    "objectID": "about.html#contact",
+    "href": "about.html#contact",
+    "title": "Taija",
+    "section": "",
+    "text": "Probably the easiest way is to join the JuliaLang Slack and join our #taija channel. You can also post a GitHub Issue on our organization repo. You can find @pat-alt’s socials and contact details on his website: www.paltmeyer.com."
+  },
+  {
+    "objectID": "about.html#footnotes",
+    "href": "about.html#footnotes",
+    "title": "Taija",
+    "section": "Footnotes",
+    "text": "Footnotes\n\n\nExperiments were run in parallel using Python’s MAPIE and ConformalPrediction.jl, in order to cross-check results. Reported results were produced using MAPIE.↩︎"
+  },
+  {
+    "objectID": "about.html#taija-1",
+    "href": "about.html#taija-1",
+    "title": "Taija",
+    "section": "",
+    "text": "Taija stands for Trustworthy Artificial Intelligence in Julia. When thinking about a logo that embodies trustworthiness, we quickly landed on 🐶."
+  },
+  {
+    "objectID": "index.html#about",
+    "href": "index.html#about",
+    "title": "Taija",
+    "section": "About",
+    "text": "About\nTaija currently covers a range of approaches towards making AI systems more trustworthy:\n\nModel Explainability (CounterfactualExplanations.jl)\nAlgorithmic Recourse (CounterfactualExplanations.jl, AlgorithmicRecourseDynamics.jl)\nPredictive Uncertainty Quantification (ConformalPrediction.jl, LaplaceRedux.jl)\nEffortless Bayesian Deep Learning (LaplaceRedux.jl)\nHybrid Learning (JointEnergyModels.jl)\n\nVarious meta packages can be used to extend the core functionality:\n\nPlotting (TaijaPlotting.jl)\nDatasets for testing and benchmarking (TaijaData.jl)\nParallelization (TaijaParallel.jl)\nInteroperability with other programming languages (TaijaInteroperability.jl)\n\nThe TaijaBase.jl package provides common symbols, types and functions that are used across all or multiple Taija packages.\n\n\n\n\n\n\n%%{\n  init: {\n    'theme': 'base',\n    'themeVariables': {\n      'primaryColor': '#BB2528',\n      'primaryTextColor': '#fff',\n      'primaryBorderColor': '#7C0000',\n      'lineColor': '#F8B229',\n      'secondaryColor': '#006100',\n      'tertiaryColor': '#e9edfb',\n      'fontFamily': \"avenir\"\n    }\n  }\n}%%\n\nflowchart TB\n\n    classDef taija fill:#389836,stroke:#333,color:#fff;\n    classDef core fill:#CB3C33,stroke:#333,color:#fff;\n    classDef base fill:#9558B2,stroke:#333,color:#fff;\n\n    %% Base\n    base[\"TaijaBase.jl\"]\n\n    %% Meta\n    interop[\"TaijaInteroperability.jl\"]\n    data[\"TaijaData.jl\"]\n    parallel[\"TaijaParallel.jl\"]\n    plotting[\"TaijaPlotting.jl\"]\n\n    %% Core\n    ce[\"CounterfactualExplanations.jl\"]\n    ar[\"AlgorithmiRecourseDynamics.jl\"]\n    cp[\"ConformalPrediction.jl\"]\n    lr[\"LaplaceRedux.jl\"]\n    jem[\"JointEnergyModels.jl\"]\n\n    class base base;\n    class interop,data,parallel,plotting taija;\n    class ce,cp,lr,jem,ar core;\n\n    %% Graph\n    subgraph \"Meta Packages\"\n        data & plotting & parallel & interop\n    end\n\n    subgraph \"Core Packages\"\n        ce & cp & lr & jem & ar\n    end\n\n\n\nFigure 1: An overview of the Taija ecosystem.\n\n\n\n\n\n\nWhy Taija?\n\nTaija stands for Trustworthy Artificial Intelligence in Julia. When thinking about a logo that embodies trustworthiness, we quickly landed on 🐶."
+  },
+  {
+    "objectID": "index.html#news",
+    "href": "index.html#news",
+    "title": "Taija",
+    "section": "News",
+    "text": "News\n\n2024-04-09: Taija is taking part in Google Summer of Code for the first time! We are excited to mentor students on various projects related to Trustworthy AI in Julia. Find the list of projects here."
+  },
+  {
+    "objectID": "index.html#contribute",
+    "href": "index.html#contribute",
+    "title": "Taija",
+    "section": "Contribute",
+    "text": "Contribute\nWe welcome contributions of any kind. If you want to get involved or use our software for or project, please feel free to reach out. If you have questions, comments or issues related to specific packages, please feel free to open issues or discussions on the respective repository.\n\nWorking on related projects?\nAre you working on a Julia package that would fit well into this organization? Or do you perhaps have ideas for future projects? We’d love to hear about it, so please do get in touch!"
+  },
+  {
+    "objectID": "index.html#sponsors",
+    "href": "index.html#sponsors",
+    "title": "Taija",
+    "section": "Sponsors",
+    "text": "Sponsors\nSome of Taija’s contributors have been partially or fully funded by one or more of the following entities:"
+  },
+  {
+    "objectID": "index.html#research-using-taija",
+    "href": "index.html#research-using-taija",
+    "title": "Taija",
+    "section": "Research using Taija",
+    "text": "Research using Taija\nTaija has been used in the following publications:\n\nConformal Intent Classification and Clarification for Fast and Accurate Intent Recognition [@hengst2024conformal] upcoming in ACL’s NAACL Findings 20241.\nFaithful Model Explanations through Energy-Constrained Conformal Counterfactuals [@altmeyer2024faithful] published in Proceedings of the AAAI Conference on Artificial Intelligence 2024.\nExplaining Black-Box Models through Counterfactuals [@altmeyer2023explaining] published in JuliaCon Proceedings.\nEndogenous Macrodynamics in Algorithmic Recourse [@altmeyer2023endogenous] published in Proceedings of the 2023 IEEE Conference on Secure and Trustworthy Machine Learning (SaTML).\n\nIf you have used Taija in your research, please let us know so we can add your publication to the list."
+  },
+  {
+    "objectID": "index.html#related-software",
+    "href": "index.html#related-software",
+    "title": "Taija",
+    "section": "Related Software",
+    "text": "Related Software\nOur packages are currently tailored towards the following larger package ecosystems for AI and machine learning in Julia:\n\nFluxML\nMLJ\n\nOther external packages and ecosystems related to Trustworthy AI in Julia include:\n\nJulia-XAI\nShapML.jl"
+  },
+  {
+    "objectID": "index.html#taija-1",
+    "href": "index.html#taija-1",
+    "title": "Taija",
+    "section": "🐶 Taija?",
+    "text": "🐶 Taija?\nTaija stands for Trustworthy Artificial Intelligence in Julia. When thinking about a logo that embodies trustworthiness, we quickly landed on 🐶."
+  },
+  {
+    "objectID": "index.html#contact",
+    "href": "index.html#contact",
+    "title": "Taija",
+    "section": "Contact",
+    "text": "Contact\nProbably the easiest way is to join the JuliaLang Slack and join our #taija channel. You can also post a GitHub Issue on our organization repo. You can find @pat-alt’s socials and contact details on his website: www.paltmeyer.com."
+  },
+  {
+    "objectID": "index.html#footnotes",
+    "href": "index.html#footnotes",
+    "title": "Taija",
+    "section": "Footnotes",
+    "text": "Footnotes\n\n\nExperiments were run in parallel using Python’s MAPIE and ConformalPrediction.jl, in order to cross-check results. Reported results were produced using MAPIE.↩︎"
+  },
+  {
+    "objectID": "index.html#taija",
+    "href": "index.html#taija",
+    "title": "Taija",
+    "section": "🐶 Taija?",
+    "text": "🐶 Taija?\nTaija stands for Trustworthy Artificial Intelligence in Julia. When thinking about a logo that embodies trustworthiness, we quickly landed on 🐶."
+  },
+  {
+    "objectID": "index.html#references",
+    "href": "index.html#references",
+    "title": "Taija",
+    "section": "🎓 References",
+    "text": "🎓 References"
+  },
+  {
+    "objectID": "index.html#news-1",
+    "href": "index.html#news-1",
+    "title": "Taija",
+    "section": "📰 News",
+    "text": "📰 News\n\n2024-04-09: Taija is taking part in Google Summer of Code for the first time! We are excited to mentor students on various projects related to Trustworthy AI in Julia. Find the list of projects here."
+  },
+  {
+    "objectID": "index.html#contribute-1",
+    "href": "index.html#contribute-1",
+    "title": "Taija",
+    "section": "👐 Contribute",
+    "text": "👐 Contribute\nWe welcome contributions of any kind. If you want to get involved or use our software for or project, please feel free to reach out. If you have questions, comments or issues related to specific packages, please feel free to open issues or discussions on the respective repository.\n\nWorking on related projects?\nAre you working on a Julia package that would fit well into this organization? Or do you perhaps have ideas for future projects? We’d love to hear about it, so please do get in touch!"
+  },
+  {
+    "objectID": "index.html#sponsors-1",
+    "href": "index.html#sponsors-1",
+    "title": "Taija",
+    "section": "🙏 Sponsors",
+    "text": "🙏 Sponsors\nSome of Taija’s contributors have been partially or fully funded by one or more of the following entities:"
+  },
+  {
+    "objectID": "index.html#research-using-taija-1",
+    "href": "index.html#research-using-taija-1",
+    "title": "Taija",
+    "section": "📚 Research using Taija",
+    "text": "📚 Research using Taija\nTaija has been used in the following publications:\n\nConformal Intent Classification and Clarification for Fast and Accurate Intent Recognition [@hengst2024conformal] upcoming in ACL’s NAACL Findings 20242.\nFaithful Model Explanations through Energy-Constrained Conformal Counterfactuals [@altmeyer2024faithful] published in Proceedings of the AAAI Conference on Artificial Intelligence 2024.\nExplaining Black-Box Models through Counterfactuals [@altmeyer2023explaining] published in JuliaCon Proceedings.\nEndogenous Macrodynamics in Algorithmic Recourse [@altmeyer2023endogenous] published in Proceedings of the 2023 IEEE Conference on Secure and Trustworthy Machine Learning (SaTML).\n\nIf you have used Taija in your research, please let us know so we can add your publication to the list."
+  },
+  {
+    "objectID": "index.html#related-software-1",
+    "href": "index.html#related-software-1",
+    "title": "Taija",
+    "section": "🔗 Related Software",
+    "text": "🔗 Related Software\nOur packages are currently tailored towards the following larger package ecosystems for AI and machine learning in Julia:\n\nFluxML\nMLJ\n\nOther external packages and ecosystems related to Trustworthy AI in Julia include:\n\nJulia-XAI\nShapML.jl"
+  },
+  {
+    "objectID": "index.html#taija-2",
+    "href": "index.html#taija-2",
+    "title": "Taija",
+    "section": "🐶 Taija?",
+    "text": "🐶 Taija?\nTaija stands for Trustworthy Artificial Intelligence in Julia. When thinking about a logo that embodies trustworthiness, we quickly landed on 🐶."
+  },
+  {
+    "objectID": "index.html#references-1",
+    "href": "index.html#references-1",
+    "title": "Taija",
+    "section": "🎓 References",
+    "text": "🎓 References"
+  },
+  {
+    "objectID": "index.html#contact-1",
+    "href": "index.html#contact-1",
+    "title": "Taija",
+    "section": "📬 Contact",
+    "text": "📬 Contact\nProbably the easiest way is to join the JuliaLang Slack and join our #taija channel. You can also post a GitHub Issue on our organization repo. You can find @pat-alt’s socials and contact details on his website: www.paltmeyer.com."
   }
 ]
