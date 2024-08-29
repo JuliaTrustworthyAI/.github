@@ -5,13 +5,18 @@ format:
 bibliography: bib.bib
 ---
 
-{{< include content/about.qmd >}}
+# Taija
 
-{{< include content/news.qmd >}}
+# Trustworthy Artificial Intelligence in Julia
+
+> [!TIP]
+> Find more relevant information and Taija's blog at [www.taija.org](https://www.taija.org/).
+
+{{< include content/about.qmd >}}
 
 {{< include content/contribute.qmd >}}
 
-{{< include content/content/research.qmd >}}
+{{< include content/research.qmd >}}
 
 {{< include content/sponsors.qmd >}}
 

@@ -1,0 +1,1 @@
+This repository contains the source code that builds Taija's website: [www.taija.org](https://www.taija.org/).
