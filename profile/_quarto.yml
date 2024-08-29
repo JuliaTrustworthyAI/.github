@@ -1,4 +1,5 @@
 project:
+  title: "Taija's homepage"
   type: website
   output-dir: ../docs
   execute-dir: project
@@ -7,6 +8,7 @@ project:
     - "www/"
 
 website:
+  title: "Taija"
   page-navigation: true
   favicon: www/favicon.ico
   site-url: https://www.taija.org/
