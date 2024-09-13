@@ -1,0 +1,119 @@
+---
+title: "When Causal meets Recourse"
+subtitle: "Counterfactual Explanations through Structural Causal Models"
+date: '2024-09-03'
+description: |
+    This post introduces a new tool in CounterfactualExplanations.jl, enhancing the package with causal reasoning to generate counterfactual explanations. The functionality can be used to explain machine learning algorithms developed in Julia and other popular programming languages like Python and R. Unlike traditional counterfactual generators, this approach utilizes causal information to perturb features intelligently.
+categories:
+  - counterfactuals
+  - explainable AI
+  - causality
+  - Julia
+image: www/intro.gif
+execute:
+  eval: false
+  echo: true
+draft: false
+---
+
+# Introduction
+
+In recent years, the need for interpretable and explainable AI has surged, particularly in high-stakes domains. Counterfactual explanations provide a means to understand how changes to input features could alter the outcomes of machine learning models. This blog post presents a new tool in the CounterfactualExplanations.jl package, developed during my JSoC (Julia Summer of Code) project, which incorporates causal reasoning into counterfactual generation.
+
+# Project Overview
+
+This project aimed to enhance the CounterfactualExplanations.jl package by infusing it with a robust mathematical foundation for minimal algorithmic recourse, based on the principles of causal reasoning @karimi2021. 
+
+## Key Contributions
+
+During the project, I contributed to two key repositories:
+
+1. **CounterfactualExplanations.jl**: Developed a new tool for generating counterfactual explanations using causal information. This allows users to create smarter perturbations rather than random adjustments, ultimately providing more meaningful insights.
+
+2. **CausalInference.jl**: Implemented a Structural Causal Model (SCM) structure that extracts information from data, laying the groundwork for the causal reasoning capabilities in CounterfactualExplanations.jl.
+
+This was an amazing experience, not just experience contribute to two repositories simultaneously, but also to work with the mantainers of these repos. I learned a lot about the Julia language and the Julia community. This was possible because of the mentorship of Patrick Altmeyer(CounterfactualExplanations) and Moritz Schauer (CausalInference), who guided me throughout the project and are amazing researchers.
+
+
+
+## The `MINTGenerator`
+
+In this project, we developed the MINTGenerator, a counterfactual generator based on the Recourse through Minimal
+Intervention (MINT) method proposed by @karimi2021.
+
+## Description
+
+The MINTGenerator incorporates causal reeasoning in algorithm recourse to achieve minimal interventions when generating a counterfactual explanation. In this sense, the main ideia is that just perturbating a black box model without taking into account the causal relations in the data can guide to misleading recommendations. Here we now shift to a perspective where every action/pertubation is an intervetion in the causal graph of the problem, thus the change is not made just in the intervened upon variable, but also in its childs in the causal structure. The generator utilizes a Structural Causal Model(SCM) to encode the variables in a way that causal effects are propagated and uses a generic gradient-based generator to create the search path, that is, any gradient-base generator (ECCo, REVISE, Watcher, ...) can be used with the MINT SCM encoder to generate counterfactual samples in latent space for minimal intervetions algorithm recourse.
+
+The MINT algorithm minimizes a loss function that combines the causal constraints of the SCM and the distance between the generated counterfactual and the original input. Since we want a gradient-based generator, we need to pass the constrained optimizaiton problem into an unconstrained one and we do this by using the Lagrangian. Initially, as defined in [@karimi2021], we aim to aim to find the minimal cost set of actions $A$ (in the form of structural interventions) that results in a counterfactual instance yielding the favorable output from $h$,
+
+
+\begin{aligned}
+
+A^* \in \arg\min_A \text{cost}(A; \mathbf{x}_F)\\
+\textrm{s.t.} \quad  h(\mathbf{x}_{SCF}) \neq h(\mathbf{x}_F) \; \; \text{,}\\
+
+\end{aligned} 
+
+where $\mathbf{x}_F$ is the original input, $\mathbf{x}_{SCF}$ is the counterfactual instance, and $h$ is the black-box model. We use the $\mathbf{x}_{SCF}$ terminology because the counterfactual is derived from the SCM,
+
+\begin{equation}
+
+x_{SCF_i} = 
+\begin{cases}
+x_{F_i} + \delta_i, & \text{if } i \in I \\
+x_{F_i} + f_i(\text{pa}_{SCF_i}) - f_i(\text{pa}_{F_i}), & \text{if } i \notin I  \; \; \text{,}
+\end{cases} 
+
+\end{equation}
+
+where $I$ is the set of intervened upon variables, $f_i$ is the function that generates the value of the variable $i$ given its parents, and $\text{pa}_{SCF_i}$ and $\text{pa}_{F_i}$ are the parents of the variable $i$ in the counterfactual and original instance, respectively. This closed formula for the decision variable $\mathbf{x}_{SCF}$ is what makes possible to use a gradient-based generator, since with it the lagrangian is differentiable,
+
+\begin{equation}
+\mathcal{L}(A ; \lambda) = \text{cost}(A; \mathbf{x}_F) + \lambda \left(h(\mathbf{x}_{SCF}) - h(\mathbf{x}_F) \right) \; \; \text{,}
+\end{equation}
+
+or in simple terms and more standard, since $\lambda$ is constant,
+
+\begin{equation}
+\mathcal{L_{\texttt{MINT}}}(\mathbf{x}_{SCF}) = \lambda \text{cost}(\mathbf{x}_{SCF}; \mathbf{x}_F) + \text{yloss}(\mathbf{x}_{SCF},y^*) \; \; \text{,}
+\end{equation}
+
+where $y^*$ is clearly $h(x_F)$ and $\text{yloss}$ is : 
+
+\begin{equation}  
+\text{yloss}(\mathbf{x}_{SCF}, y^*) = h \left(\left\{ x_{F_i} + \delta_i [i \in I] + \left(f_i(\text{pa}_{SCF_i}) - f_i(\text{pa}_{F_i}) \right) [i \notin I] \right\}_{i=1}^n \right) - y^* \; \; \text{.} 
+\end{equation}
+
+
+
+## Implementation
+
+In terms of implementation, we need to capture the causal relations from the data, that's where `CausalInference.jl` comes in. However, before the project, the package did not have a SCM structure, in the sense that the methods just captured the topological Directed Acyclic Graph (DAG) that generated the data, that is, no causal structural equations were provided,
+
+```{julia}
+using CausalInference
+using Plots, GraphRecipes
+using Random
+Random.seed!(1)
+
+N = 2000 # number of data points
+
+x = randn(N)
+v = x + randn(N)*0.25
+w = x + randn(N)*0.25
+z = v + w + randn(N)*0.25
+s = z + randn(N)*0.25
+
+df = (x=x, v=v, w=w, z=z, s=s)
+
+est_g, score = ges(df; penalty=1.0, parallel=true)
+
+graphplot(est_g, names= [String(k) for k in keys(df)])
+```
+
+# Conclusion
+
+<!-- In conclusion, this project has successfully integrated causal reasoning into the CounterfactualExplanations.jl package, providing a valuable tool for generating counterfactual explanations that are not only interpretable but also actionable. -->
+
+# References
