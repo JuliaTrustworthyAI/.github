@@ -170,7 +170,7 @@ Turning a 9 (nine) into a 4 (four).
 <section id="black-box-models" class="level3">
 <h3 class="anchored" data-anchor-id="black-box-models">Black-box models</h3>
 <p>The code below loads relevant packages along with the MNIST data and pre-trained models.</p>
-<div id="40ed4f5a" class="cell" data-execution_count="2">
+<div id="042bb677" class="cell" data-execution_count="2">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load package, models and data:</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">CounterfactualExplanations</span>, <span class="bu">Flux</span></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">CounterfactualExplanations.Data</span>: mnist_data, mnist_model, mnist_ensemble</span>
@@ -185,7 +185,7 @@ Turning a 9 (nine) into a 4 (four).
 <li><strong>Multiple dispatch</strong>: the package-internal functions <code>logits</code> and <code>probs</code> need to be extended through custom methods for the new model type.</li>
 </ol>
 <p>The following code implements these two steps first for the MLP and then for the deep ensemble.</p>
-<div id="bbeb4e2a" class="cell" data-execution_count="3">
+<div id="6ea8fb3f" class="cell" data-execution_count="3">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">CounterfactualExplanations.Models</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> <span class="bu">CounterfactualExplanations.Models</span>: logits, probs</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co"># MLP:</span></span>
@@ -216,7 +216,7 @@ Turning a 9 (nine) into a 4 (four).
 <p>Next, we need to specify the counterfactual generators we want to use. The package currently ships with two default generators that both need gradient access: firstly, the generic generator introduced by <span class="citation" data-cites="wachter2017counterfactual">@wachter2017counterfactual</span> and, secondly, a greedy generator introduced by <span class="citation" data-cites="schut2021generating">@schut2021generating</span>.</p>
 <p>The greedy generator is designed to be used with models that incorporate uncertainty in their predictions such as the deep ensemble introduced above. It works for probabilistic (Bayesian) models, because they only produce high-confidence predictions in regions of the feature domain that are populated by training samples. As long as the model is expressive enough and well-specified, counterfactuals in these regions will always be realistic and unambiguous since by construction they should look very similar to training samples. Other popular approaches to counterfactual explanations like REVISE <span class="citation" data-cites="joshi2019realistic">[@joshi2019realistic]</span> and CLUE <span class="citation" data-cites="antoran2020getting">[@antoran2020getting]</span> also play with this simple idea.</p>
 <p>The following code instantiates the two generators for the problem at hand.</p>
-<div id="db63e921" class="cell" data-execution_count="4">
+<div id="d8c4facf" class="cell" data-execution_count="4">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>generic <span class="op">=</span> <span class="fu">GenericGenerator</span>(;loss<span class="op">=:</span>logitcrossentropy)</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>greedy <span class="op">=</span> <span class="fu">GreedyGenerator</span>(;loss<span class="op">=:</span>logitcrossentropy)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
@@ -224,7 +224,7 @@ Turning a 9 (nine) into a 4 (four).
 <section id="explanations" class="level3">
 <h3 class="anchored" data-anchor-id="explanations">Explanations</h3>
 <p>Once the model and counterfactual generator are specified, running counterfactual search is very easy using the package. For a given factual (<code>x</code>), target class (<code>target</code>) and data set (<code>counterfactual_data</code>), simply running</p>
-<div id="26f7cf5c" class="cell" data-execution_count="6">
+<div id="490e2fe3" class="cell" data-execution_count="6">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">generate_counterfactual</span>(x, target, counterfactual_data, M, generic)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>will generate the results, in this case using the generic generator (<code>generic</code>) for the MLP (<code>M</code>). Since we have specified two different black-box models and two different counterfactual generators, we have four combinations of a model and a generator in total. For each of these combinations I have used the <code>generate_counterfactual</code> function to produce the results in <a href="#fig-mnist-9to4" class="quarto-xref">Figure&nbsp;1</a>.</p>
@@ -247,7 +247,7 @@ Figure&nbsp;1: Counterfactual explanations for MNIST: turning a nine (9) into a 
 <section id="explaining-a-torch-model" class="level3">
 <h3 class="anchored" data-anchor-id="explaining-a-torch-model">Explaining a <code>torch</code> model</h3>
 <p>We will consider a simple MLP trained for a binary classification task. As before we first need to adapt this custom model for use with our package. The code below the two necessary steps - sub-typing and method extension. Logits are returned by the <code>torch</code> model and copied from the R environment into the Julia scope. Probabilities are then computed inside the Julia scope by passing the logits through the sigmoid function.</p>
-<div id="ef3338c0" class="cell" data-execution_count="12">
+<div id="ccd53f80" class="cell" data-execution_count="12">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">Flux</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">CounterfactualExplanations</span>, <span class="bu">CounterfactualExplanations.Models</span></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> <span class="bu">CounterfactualExplanations.Models</span>: logits, probs <span class="co"># import functions in order to extend</span></span>
@@ -283,7 +283,7 @@ Experimental functionality
 <p>You may have stumbled across the term <em>respecify</em> above: does it really seem like a good idea to just replace an existing function from our package? Surely not! There are certainly better ways to go about this, which we will consider when adding native support for Python and R models in future package releases. Which brings us to our final section …</p>
 </div>
 </div>
-<div id="e9e335a2" class="cell" data-execution_count="13">
+<div id="30e3654f" class="cell" data-execution_count="13">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> <span class="bu">CounterfactualExplanations.Generators</span>: ∂ℓ</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">LinearAlgebra</span></span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>

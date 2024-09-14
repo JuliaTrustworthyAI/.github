@@ -6,6 +6,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
+<meta name="author" content="Jorge Luiz Franco">
 <meta name="dcterms.date" content="2024-09-03">
 <meta name="description" content="This post introduces a new tool in CounterfactualExplanations.jl, enhancing the package with causal reasoning to generate counterfactual explanations. The functionality can be used to explain machine learning algorithms developed in Julia and other popular programming languages like Python and R. Unlike traditional counterfactual generators, this approach utilizes causal information to perturb features intelligently.">
 
@@ -56,7 +57,27 @@ div.sourceCode
 @media screen {
 pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
-</style>
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
 
 
 <script src="index_files/libs/clipboard/clipboard.min.js"></script>
@@ -129,6 +150,12 @@ window.Quarto = {
 
 <div class="quarto-title-meta">
 
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p><a href="https://www.linkedin.com/in/jorgelwyz/">Jorge Luiz Franco</a> </p>
+          </div>
+  </div>
     
     <div>
     <div class="quarto-title-meta-heading">Published</div>
@@ -151,7 +178,7 @@ window.Quarto = {
 </section>
 <section id="project-overview" class="level1">
 <h1>Project Overview</h1>
-<p>This project aimed to enhance the CounterfactualExplanations.jl package by infusing it with a robust mathematical foundation for minimal algorithmic recourse, based on the principles of causal reasoning <span class="citation" data-cites="karimi2021">@karimi2021</span>.</p>
+<p>This project aimed to enhance the CounterfactualExplanations.jl package by infusing it with a robust mathematical foundation for minimal algorithmic recourse, based on the principles of causal reasoning <span class="citation" data-cites="karimi2021">(<a href="#ref-karimi2021" role="doc-biblioref">Karimi, Schölkopf, and Valera 2021</a>)</span>.</p>
 <section id="key-contributions" class="level2">
 <h2 class="anchored" data-anchor-id="key-contributions">Key Contributions</h2>
 <p>During the project, I contributed to two key repositories:</p>
@@ -163,12 +190,12 @@ window.Quarto = {
 </section>
 <section id="the-mintgenerator" class="level2">
 <h2 class="anchored" data-anchor-id="the-mintgenerator">The <code>MINTGenerator</code></h2>
-<p>In this project, we developed the MINTGenerator, a counterfactual generator based on the Recourse through Minimal Intervention (MINT) method proposed by <span class="citation" data-cites="karimi2021">@karimi2021</span>.</p>
+<p>In this project, we developed the MINTGenerator, a counterfactual generator based on the Recourse through Minimal Intervention (MINT) method proposed by <span class="citation" data-cites="karimi2021">Karimi, Schölkopf, and Valera (<a href="#ref-karimi2021" role="doc-biblioref">2021</a>)</span>.</p>
 </section>
 <section id="description" class="level2">
 <h2 class="anchored" data-anchor-id="description">Description</h2>
 <p>The MINTGenerator incorporates causal reeasoning in algorithm recourse to achieve minimal interventions when generating a counterfactual explanation. In this sense, the main ideia is that just perturbating a black box model without taking into account the causal relations in the data can guide to misleading recommendations. Here we now shift to a perspective where every action/pertubation is an intervetion in the causal graph of the problem, thus the change is not made just in the intervened upon variable, but also in its childs in the causal structure. The generator utilizes a Structural Causal Model(SCM) to encode the variables in a way that causal effects are propagated and uses a generic gradient-based generator to create the search path, that is, any gradient-base generator (ECCo, REVISE, Watcher, …) can be used with the MINT SCM encoder to generate counterfactual samples in latent space for minimal intervetions algorithm recourse.</p>
-<p>The MINT algorithm minimizes a loss function that combines the causal constraints of the SCM and the distance between the generated counterfactual and the original input. Since we want a gradient-based generator, we need to pass the constrained optimizaiton problem into an unconstrained one and we do this by using the Lagrangian. Initially, as defined in <span class="citation" data-cites="karimi2021">[@karimi2021]</span>, we aim to aim to find the minimal cost set of actions <span class="math inline">\(A\)</span> (in the form of structural interventions) that results in a counterfactual instance yielding the favorable output from <span class="math inline">\(h\)</span>,</p>
+<p>The MINT algorithm minimizes a loss function that combines the causal constraints of the SCM and the distance between the generated counterfactual and the original input. Since we want a gradient-based generator, we need to pass the constrained optimizaiton problem into an unconstrained one and we do this by using the Lagrangian. Initially, as defined in <span class="citation" data-cites="karimi2021">(<a href="#ref-karimi2021" role="doc-biblioref">Karimi, Schölkopf, and Valera 2021</a>)</span>, we aim to aim to find the minimal cost set of actions <span class="math inline">\(A\)</span> (in the form of structural interventions) that results in a counterfactual instance yielding the favorable output from <span class="math inline">\(h\)</span>,</p>
 <span class="math display">\[\begin{aligned}
 
 A^* \in \arg\min_A \text{cost}(A; \mathbf{x}_F)\\
@@ -200,8 +227,10 @@ x_{F_i} + f_i(\text{pa}_{SCF_i}) - f_i(\text{pa}_{F_i}), &amp; \text{if } i \not
 </section>
 <section id="implementation" class="level2">
 <h2 class="anchored" data-anchor-id="implementation">Implementation</h2>
-<p>In terms of implementation, we need to capture the causal relations from the data, that’s where <code>CausalInference.jl</code> comes in. However, before the project, the package did not have a SCM structure, in the sense that the methods just captured the topological Directed Acyclic Graph (DAG) that generated the data, that is, no causal structural equations were provided,</p>
-<div id="0f46fd78" class="cell" data-execution_count="1">
+<section id="causalinference.jl" class="level3">
+<h3 class="anchored" data-anchor-id="causalinference.jl"><code>CausalInference.jl</code></h3>
+<p>In terms of implementation, we need to capture the causal relations from the data, that’s where <code>CausalInference.jl</code> comes in. However, before the project, the package did not have a SCM structure, in the sense that the methods just captured the topological Directed Acyclic Graph (DAG) that showed the causality ruling the data, that is, no causal structural equations were provided,</p>
+<div id="48d194d1" class="cell" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">CausalInference</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">Plots</span>, <span class="bu">GraphRecipes</span></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">Random</span></span>
@@ -219,19 +248,107 @@ x_{F_i} + f_i(\text{pa}_{SCF_i}) - f_i(\text{pa}_{F_i}), &amp; \text{if } i \not
 <span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>est_g, score <span class="op">=</span> <span class="fu">ges</span>(df; penalty<span class="op">=</span><span class="fl">1.0</span>, parallel<span class="op">=</span><span class="cn">true</span>)</span>
 <span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="fu">graphplot</span>(est_g, names<span class="op">=</span> [<span class="fu">String</span>(k) for k <span class="kw">in</span> <span class="fu">keys</span>(df)])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="fu">graphplot</span>(<span class="fu">pdag2dag!</span>(est_g), names<span class="op">=</span> [<span class="fu">String</span>(k) for k <span class="kw">in</span> <span class="fu">keys</span>(df)])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+<p>So, our goal was given the DAG provided by the <code>ges</code> method in the causal discovery <span class="citation" data-cites="ges2003">(<a href="#ref-ges2003" role="doc-biblioref">Chickering 2003</a>)</span>, generate equations that rules each of these causal relations, represented in the DAG as directed edges. The SCM is the union of the DAG and these causal equations, that is, the SCM is a tuple <span class="math inline">\((G, \mathbf{f})\)</span>, where <span class="math inline">\(G\)</span> is the DAG and <span class="math inline">\(\mathbf{f}\)</span> is the set of functions that generates the value of each variable given its parents.</p>
+<p>Our solution for constructing the structural causal equations was to assume that the data was generated by a linear model, ie, the causal relations were linear. For the DAG provided in the code example we derive</p>
+<p><span class="math display">\[ v = \mathcal{b}_v \]</span></p>
+<p><span class="math display">\[ x = \mathcal{a}_{v \to x} v + \mathcal{b}_x \]</span></p>
+<p><span class="math display">\[ w = \mathcal{a}_{x \to w} x + \mathcal{b}_w \]</span></p>
+<p><span class="math display">\[ z = \mathcal{a}_{v \to z} v+ \mathcal{a}_{w \to z} w + \mathcal{b}_z \]</span></p>
+<p><span class="math display">\[ s = \mathcal{a}_{z \to s} z + \mathcal{b}_s \]</span></p>
+<p>and that’s the tricky thing, as we can see these causal equations are different than the ones that generated the data, but they are the ones that respect the causal system obtained from the obtained DAG. Here <span class="math inline">\(\mathcal{b}_i\)</span> and <span class="math inline">\(\mathcal{a}_{i \to j}\)</span> are the intercept term and the coefficient obtained from the linear regression, respectively. To correctly solve the linear regression respecting the dependencies of the causal graph, we use <code>topological_sort_by_dfs</code> from <code>Graphs.jl</code>.</p>
+<p>Now, with the SCM structure in hand, we see that the representation could be a struct containing the DAG and the coefficients/intercepts of the causal equations, this maps exactly the tuple <span class="math inline">\((G, \mathbf{f})\)</span> that we defined. However, since we need these equations to be differentiable, we need to define a function that takes the SCM and returns the value of the variable given its parents and using just the coefficients and the DAG, lead to errors, because <code>AutoDiff</code> does not deal well with functions that are conditioned (<code>if</code> statements). So, we need to define a way to retrieve the system of causal equations in a smooth way and that’s where the <code>causal_effects</code> matrix comes to the rescue.</p>
+<p>Let the factual vector of features be denoted as:</p>
+<p><span class="math display">\[
+\mathbf{x}_F =
+\begin{bmatrix}
+x_{F_1} \\
+x_{F_2} \\
+x_{F_3} \\
+\vdots \\
+x_{F_n}
+\end{bmatrix}
+\]</span></p>
+<p>Let the <code>causal_effects</code> matrix be:</p>
+<p><span class="math display">\[
+\mathbf{C} =
+\begin{bmatrix}
+a_{11} &amp; a_{12} &amp; \cdots &amp; a_{1n} &amp; b_1 \\
+a_{21} &amp; a_{22} &amp; \cdots &amp; a_{2n} &amp; b_2 \\
+a_{31} &amp; a_{32} &amp; \cdots &amp; a_{3n} &amp; b_3 \\
+\vdots &amp; \vdots &amp; \ddots &amp; \vdots &amp; \vdots \\
+a_{n1} &amp; a_{n2} &amp; \cdots &amp; a_{nn} &amp; b_n \\
+\end{bmatrix}
+\]</span></p>
+<p>Here, <span class="math inline">\(a_{ij}\)</span> represents the coefficient from the causal effect of <span class="math inline">\(x_{F_j}\)</span> on <span class="math inline">\(x_{F_i}\)</span>, and <span class="math inline">\(b_i\)</span> represents the intercept term for the variable <span class="math inline">\(x_{F_i}\)</span>.</p>
+<p>The matrix multiplication of the <code>causal_effects</code> matrix with the factual vector (excluding the bias term) is given by:</p>
+<p><span class="math display">\[
+\mathbf{C}_{:, 1:n} \cdot \mathbf{x}_F =
+\begin{bmatrix}
+a_{11} &amp; a_{12} &amp; \cdots &amp; a_{1n} \\
+a_{21} &amp; a_{22} &amp; \cdots &amp; a_{2n} \\
+a_{31} &amp; a_{32} &amp; \cdots &amp; a_{3n} \\
+\vdots &amp; \vdots &amp; \ddots &amp; \vdots \\
+a_{n1} &amp; a_{n2} &amp; \cdots &amp; a_{nn}
+\end{bmatrix}
+\begin{bmatrix}
+x_{F_1} \\
+x_{F_2} \\
+x_{F_3} \\
+\vdots \\
+x_{F_n}
+\end{bmatrix}
+\]</span></p>
+<p>Finally, we add the bias term:</p>
+<p><span class="math display">\[
+\mathbf{x}_{SCF} = \mathbf{C}_{:, 1:n} \cdot \mathbf{x}_F +
+\begin{bmatrix}
+b_1 \\
+b_2 \\
+b_3 \\
+\vdots \\
+b_n
+\end{bmatrix}
+\]</span></p>
+<p>In expanded form:</p>
+<p><span class="math display">\[
+\mathbf{x}_{SCF_i} = a_{i1} x_{F_1} + a_{i2} x_{F_2} + \cdots + a_{in} x_{F_n} + b_i, \quad \forall i = 1, 2, \dots, n
+\]</span></p>
+<p>This equation shows how each counterfactual variable <span class="math inline">\(x_{SCF_i}\)</span> is generated as a linear combination of the factual inputs <span class="math inline">\(x_{F_j}\)</span> based on the causal effects matrix, with an intercept term <span class="math inline">\(b_i\)</span> added for each variable.</p>
+<p>One can note that the <code>orphan</code> nodes, that is, the nodes that do not have parents in the DAG, are going to be equal to the intercept term <span class="math inline">\(\mathcal{b}_\hat{o}\)</span>. The intuition behind this is that when we do the linear regression, variables that have no causal parents are just equal to the unconditional mean of the variable, i.e, we get <span class="math inline">\(x_{SCF_\hat{o}} = \mathbb{E}(x_\hat{o})\)</span>. Because of this, in some cases a better understanding of the regression is needed, so the residuals are also part of the SCM structure,</p>
+<div id="cda2fdc4" class="cell" data-execution_count="2">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> SCM</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    variables<span class="op">::</span><span class="dt">Vector{String}</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    coefficients<span class="op">::</span><span class="dt">Vector{Vector{Float64}}</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    residuals<span class="op">::</span><span class="dt">Vector{Vector{Float64}}</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    dag<span class="op">::</span><span class="dt">DiGraph</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    causal_effects<span class="op">::</span><span class="dt">Matrix{Float64}</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="counterfactualexplanations.jl" class="level3">
+<h3 class="anchored" data-anchor-id="counterfactualexplanations.jl"><code>CounterfactualExplanations.jl</code></h3>
+</section>
 </section>
 </section>
 <section id="conclusion" class="level1">
 <h1>Conclusion</h1>
-<p>In conclusion, this project has successfully integrated causal reasoning into the CounterfactualExplanations.jl package, providing a valuable tool for generating counterfactual explanations that are not only interpretable but also actionable.</p>
+<!-- In conclusion, this project has successfully integrated causal reasoning into the CounterfactualExplanations.jl package, providing a valuable tool for generating counterfactual explanations that are not only interpretable but also actionable. -->
 </section>
-<section id="references" class="level1">
-<h1>References</h1>
+<section id="references" class="level1 unnumbered">
+
+
 </section>
 
-</main>
+<div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" role="doc-bibliography" id="quarto-bibliography"><h2 class="anchored quarto-appendix-heading">References</h2><div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list">
+<div id="ref-ges2003" class="csl-entry" role="listitem">
+Chickering, David Maxwell. 2003. <span>“Optimal Structure Identification with Greedy Search.”</span> <em>J. Mach. Learn. Res.</em> 3 (null): 507–54. <a href="https://doi.org/10.1162/153244303321897717">https://doi.org/10.1162/153244303321897717</a>.
+</div>
+<div id="ref-karimi2021" class="csl-entry" role="listitem">
+Karimi, Amir-Hossein, Bernhard Schölkopf, and Isabel Valera. 2021. <span>“Algorithmic Recourse: From Counterfactual Explanations to Interventions.”</span> In <em>Proceedings of the 2021 ACM Conference on Fairness, Accountability, and Transparency</em>, 353–62. FAccT ’21. New York, NY, USA: Association for Computing Machinery. <a href="https://doi.org/10.1145/3442188.3445899">https://doi.org/10.1145/3442188.3445899</a>.
+</div>
+</div></section></div></main>
 <!-- /main column -->
 <script id="quarto-html-after-body" type="application/javascript">
 window.document.addEventListener("DOMContentLoaded", function (event) {
