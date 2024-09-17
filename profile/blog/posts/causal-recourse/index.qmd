@@ -53,10 +53,8 @@ The MINT algorithm minimizes a loss function that combines the causal constraint
 
 $$
 \begin{aligned}
-
 A^* \in \arg\min_A \text{cost}(A; \mathbf{x}_F)\\
 \textrm{s.t.} \quad  h(\mathbf{x}_{SCF}) \neq h(\mathbf{x}_F) \; \; \text{,}\\
-
 \end{aligned} 
 $$
 
@@ -98,9 +96,15 @@ In terms of implementation, we need to capture the causal relations from the dat
 #| output: true
 
 using CausalInference
-using Plots, GraphRecipes
+using CounterfactualExplanations
+using CounterfactualExplanations.GenerativeModels
+using Graphs
+using GraphRecipes
+using MultivariateStats
+using Plots
 using Random
 Random.seed!(1)
+using StatsBase
 
 N = 2000 # number of data points
 
@@ -114,7 +118,7 @@ df = (x=x, v=v, w=w, z=z, s=s)
 
 est_g, score = ges(df; penalty=1.0, parallel=true)
 
-plt = graphplot(pdag2dag!(est_g), names= [String(k) for k in keys(df)], size=(500,500), nodesize=0.1, fontsize=2)
+plt = graphplot(pdag2dag!(est_g), names= [String(k) for k in keys(df)], size=(500,500), nodesize=0.1, fontsize=25)
 savefig(plt, "www/intro.png")
 display(plt)
 ```

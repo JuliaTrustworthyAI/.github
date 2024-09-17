@@ -304,14 +304,12 @@ window.Quarto = {
 <h2 class="anchored" data-anchor-id="description">Description</h2>
 <p>The MINTGenerator incorporates causal reeasoning in algorithm recourse to achieve minimal interventions when generating a counterfactual explanation. In this sense, the main ideia is that just perturbating a black box model without taking into account the causal relations in the data can guide to misleading recommendations. Here we now shift to a perspective where every action/pertubation is an intervetion in the causal graph of the problem, thus the change is not made just in the intervened upon variable, but also in its childs in the causal structure. The generator utilizes a Structural Causal Model(SCM) to encode the variables in a way that causal effects are propagated and uses a generic gradient-based generator to create the search path, that is, any gradient-base generator (ECCo, REVISE, Watcher, …) can be used with the MINT SCM encoder to generate counterfactual samples in latent space for minimal intervetions algorithm recourse.</p>
 <p>The MINT algorithm minimizes a loss function that combines the causal constraints of the SCM and the distance between the generated counterfactual and the original input. Since we want a gradient-based generator, we need to pass the constrained optimizaiton problem into an unconstrained one and we do this by using the Lagrangian. Initially, as defined in <span class="citation" data-cites="karimi2021algorithmic">(<a href="#ref-karimi2021algorithmic" role="doc-biblioref">Karimi, Schölkopf, and Valera 2021</a>)</span>, we aim to aim to find the minimal cost set of actions <span class="math inline">\(A\)</span> (in the form of structural interventions) that results in a counterfactual instance yielding the favorable output from <span class="math inline">\(h\)</span>,</p>
-$$
-<span class="math display">\[\begin{aligned}
-
+<p><span class="math display">\[
+\begin{aligned}
 A^* \in \arg\min_A \text{cost}(A; \mathbf{x}_F)\\
 \textrm{s.t.} \quad  h(\mathbf{x}_{SCF}) \neq h(\mathbf{x}_F) \; \; \text{,}\\
-
-\end{aligned}\]</span>
-<p>$$</p>
+\end{aligned}
+\]</span></p>
 <p>where <span class="math inline">\(\mathbf{x}_F\)</span> is the original input, <span class="math inline">\(\mathbf{x}_{SCF}\)</span> is the counterfactual instance, and <span class="math inline">\(h\)</span> is the black-box model. We use the <span class="math inline">\(\mathbf{x}_{SCF}\)</span> terminology because the counterfactual is derived from the SCM,</p>
 <p><span class="math display">\[
 x_{SCF_i} =
@@ -342,25 +340,31 @@ x_{F_i} + f_i(\text{pa}_{SCF_i}) - f_i(\text{pa}_{F_i}), &amp; \text{if } i \not
 <details open="" class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource julia number-lines code-with-copy"><code class="sourceCode julia"><span id="cb1-1"><a href="#cb1-1"></a><span class="im">using</span> <span class="bu">CausalInference</span></span>
-<span id="cb1-2"><a href="#cb1-2"></a><span class="im">using</span> <span class="bu">Plots</span>, <span class="bu">GraphRecipes</span></span>
-<span id="cb1-3"><a href="#cb1-3"></a><span class="im">using</span> <span class="bu">Random</span></span>
-<span id="cb1-4"><a href="#cb1-4"></a><span class="bu">Random</span>.<span class="fu">seed!</span>(<span class="fl">1</span>)</span>
-<span id="cb1-5"><a href="#cb1-5"></a></span>
-<span id="cb1-6"><a href="#cb1-6"></a>N <span class="op">=</span> <span class="fl">2000</span> <span class="co"># number of data points</span></span>
-<span id="cb1-7"><a href="#cb1-7"></a></span>
-<span id="cb1-8"><a href="#cb1-8"></a>x <span class="op">=</span> <span class="fu">randn</span>(N)</span>
-<span id="cb1-9"><a href="#cb1-9"></a>v <span class="op">=</span> x <span class="op">+</span> <span class="fu">randn</span>(N)<span class="op">*</span><span class="fl">0.25</span></span>
-<span id="cb1-10"><a href="#cb1-10"></a>w <span class="op">=</span> x <span class="op">+</span> <span class="fu">randn</span>(N)<span class="op">*</span><span class="fl">0.25</span></span>
-<span id="cb1-11"><a href="#cb1-11"></a>z <span class="op">=</span> v <span class="op">+</span> w <span class="op">+</span> <span class="fu">randn</span>(N)<span class="op">*</span><span class="fl">0.25</span></span>
-<span id="cb1-12"><a href="#cb1-12"></a>s <span class="op">=</span> z <span class="op">+</span> <span class="fu">randn</span>(N)<span class="op">*</span><span class="fl">0.25</span></span>
+<span id="cb1-2"><a href="#cb1-2"></a><span class="im">using</span> <span class="bu">CounterfactualExplanations</span></span>
+<span id="cb1-3"><a href="#cb1-3"></a><span class="im">using</span> <span class="bu">CounterfactualExplanations.GenerativeModels</span></span>
+<span id="cb1-4"><a href="#cb1-4"></a><span class="im">using</span> <span class="bu">Graphs</span></span>
+<span id="cb1-5"><a href="#cb1-5"></a><span class="im">using</span> <span class="bu">GraphRecipes</span></span>
+<span id="cb1-6"><a href="#cb1-6"></a><span class="im">using</span> <span class="bu">MultivariateStats</span></span>
+<span id="cb1-7"><a href="#cb1-7"></a><span class="im">using</span> <span class="bu">Plots</span></span>
+<span id="cb1-8"><a href="#cb1-8"></a><span class="im">using</span> <span class="bu">Random</span></span>
+<span id="cb1-9"><a href="#cb1-9"></a><span class="bu">Random</span>.<span class="fu">seed!</span>(<span class="fl">1</span>)</span>
+<span id="cb1-10"><a href="#cb1-10"></a><span class="im">using</span> <span class="bu">StatsBase</span></span>
+<span id="cb1-11"><a href="#cb1-11"></a></span>
+<span id="cb1-12"><a href="#cb1-12"></a>N <span class="op">=</span> <span class="fl">2000</span> <span class="co"># number of data points</span></span>
 <span id="cb1-13"><a href="#cb1-13"></a></span>
-<span id="cb1-14"><a href="#cb1-14"></a>df <span class="op">=</span> (x<span class="op">=</span>x, v<span class="op">=</span>v, w<span class="op">=</span>w, z<span class="op">=</span>z, s<span class="op">=</span>s)</span>
-<span id="cb1-15"><a href="#cb1-15"></a></span>
-<span id="cb1-16"><a href="#cb1-16"></a>est_g, score <span class="op">=</span> <span class="fu">ges</span>(df; penalty<span class="op">=</span><span class="fl">1.0</span>, parallel<span class="op">=</span><span class="cn">true</span>)</span>
-<span id="cb1-17"><a href="#cb1-17"></a></span>
-<span id="cb1-18"><a href="#cb1-18"></a>plt <span class="op">=</span> <span class="fu">graphplot</span>(<span class="fu">pdag2dag!</span>(est_g), names<span class="op">=</span> [<span class="fu">String</span>(k) for k <span class="kw">in</span> <span class="fu">keys</span>(df)], size<span class="op">=</span>(<span class="fl">500</span>,<span class="fl">500</span>), nodesize<span class="op">=</span><span class="fl">0.1</span>, fontsize<span class="op">=</span><span class="fl">2</span>)</span>
-<span id="cb1-19"><a href="#cb1-19"></a><span class="fu">savefig</span>(plt, <span class="st">"www/intro.png"</span>)</span>
-<span id="cb1-20"><a href="#cb1-20"></a><span class="fu">display</span>(plt)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-14"><a href="#cb1-14"></a>x <span class="op">=</span> <span class="fu">randn</span>(N)</span>
+<span id="cb1-15"><a href="#cb1-15"></a>v <span class="op">=</span> x <span class="op">+</span> <span class="fu">randn</span>(N)<span class="op">*</span><span class="fl">0.25</span></span>
+<span id="cb1-16"><a href="#cb1-16"></a>w <span class="op">=</span> x <span class="op">+</span> <span class="fu">randn</span>(N)<span class="op">*</span><span class="fl">0.25</span></span>
+<span id="cb1-17"><a href="#cb1-17"></a>z <span class="op">=</span> v <span class="op">+</span> w <span class="op">+</span> <span class="fu">randn</span>(N)<span class="op">*</span><span class="fl">0.25</span></span>
+<span id="cb1-18"><a href="#cb1-18"></a>s <span class="op">=</span> z <span class="op">+</span> <span class="fu">randn</span>(N)<span class="op">*</span><span class="fl">0.25</span></span>
+<span id="cb1-19"><a href="#cb1-19"></a></span>
+<span id="cb1-20"><a href="#cb1-20"></a>df <span class="op">=</span> (x<span class="op">=</span>x, v<span class="op">=</span>v, w<span class="op">=</span>w, z<span class="op">=</span>z, s<span class="op">=</span>s)</span>
+<span id="cb1-21"><a href="#cb1-21"></a></span>
+<span id="cb1-22"><a href="#cb1-22"></a>est_g, score <span class="op">=</span> <span class="fu">ges</span>(df; penalty<span class="op">=</span><span class="fl">1.0</span>, parallel<span class="op">=</span><span class="cn">true</span>)</span>
+<span id="cb1-23"><a href="#cb1-23"></a></span>
+<span id="cb1-24"><a href="#cb1-24"></a>plt <span class="op">=</span> <span class="fu">graphplot</span>(<span class="fu">pdag2dag!</span>(est_g), names<span class="op">=</span> [<span class="fu">String</span>(k) for k <span class="kw">in</span> <span class="fu">keys</span>(df)], size<span class="op">=</span>(<span class="fl">500</span>,<span class="fl">500</span>), nodesize<span class="op">=</span><span class="fl">0.1</span>, fontsize<span class="op">=</span><span class="fl">25</span>)</span>
+<span id="cb1-25"><a href="#cb1-25"></a><span class="fu">savefig</span>(plt, <span class="st">"www/intro.png"</span>)</span>
+<span id="cb1-26"><a href="#cb1-26"></a><span class="fu">display</span>(plt)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>┌ Warning: Only one thread available
@@ -370,53 +374,53 @@ x_{F_i} + f_i(\text{pa}_{SCF_i}) - f_i(\text{pa}_{F_i}), &amp; \text{if } i \not
 <!--?xml version="1.0" encoding="utf-8"?-->
 <svg xmlns="http://www.w3.org/2000/svg" xlink="http://www.w3.org/1999/xlink" width="500" height="500" viewbox="0 0 2000 2000">
 <defs>
-  <clippath id="clip350">
+  <clippath id="clip620">
     <rect x="0" y="0" width="2000" height="2000"></rect>
   </clippath>
 </defs>
-<path clip-path="url(#clip350)" d="M0 2000 L2000 2000 L2000 0 L0 0  Z" fill="#ffffff" fill-rule="evenodd" fill-opacity="1"></path>
+<path clip-path="url(#clip620)" d="M0 2000 L2000 2000 L2000 0 L0 0  Z" fill="#ffffff" fill-rule="evenodd" fill-opacity="1"></path>
 <defs>
-  <clippath id="clip351">
+  <clippath id="clip621">
     <rect x="400" y="199" width="1401" height="1401"></rect>
   </clippath>
 </defs>
-<path clip-path="url(#clip350)" d="M47.2441 1952.76 L1952.76 1952.76 L1952.76 47.2441 L47.2441 47.2441  Z" fill="#ffffff" fill-rule="evenodd" fill-opacity="1"></path>
+<path clip-path="url(#clip620)" d="M47.2441 1952.76 L1952.76 1952.76 L1952.76 47.2441 L47.2441 47.2441  Z" fill="#ffffff" fill-rule="evenodd" fill-opacity="1"></path>
 <defs>
-  <clippath id="clip352">
+  <clippath id="clip622">
     <rect x="47" y="47" width="1907" height="1907"></rect>
   </clippath>
 </defs>
-<polyline clip-path="url(#clip352)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="319.46,567.322 333.675,566.069 347.883,564.804 362.079,563.515 376.257,562.189 390.411,560.813 404.535,559.376 418.622,557.866 432.667,556.269 446.664,554.573 460.606,552.767 474.488,550.838 488.303,548.773 502.046,546.561 515.71,544.189 529.289,541.644 542.777,538.915 556.169,535.989 569.458,532.854 582.638,529.498 595.703,525.907 608.647,522.071 621.464,517.976 634.148,513.61 646.693,508.961 659.093,504.018 671.348,498.78 683.464,493.258 695.446,487.466 707.302,481.416 719.037,475.119 730.656,468.589 742.167,461.837 753.575,454.876 764.887,447.718 776.107,440.376 787.243,432.861 798.3,425.186 809.285,417.364 820.203,409.406 831.06,401.325 841.863,393.134 852.618,384.844 863.33,376.468 874.006,368.018 884.652,359.506 895.274,350.946 905.877,342.348 916.468,333.726 927.054,325.091 "></polyline>
-<polyline clip-path="url(#clip352)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="894.326,332.431 927.054,325.091 913.288,355.677 "></polyline>
-<polyline clip-path="url(#clip352)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="927.054,325.091 916.468,333.726 "></polyline>
-<polyline clip-path="url(#clip352)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="527.079,1488.89 526.865,1469.06 526.638,1449.24 526.384,1429.43 526.091,1409.62 525.745,1389.84 525.333,1370.07 524.843,1350.33 524.261,1330.62 523.573,1310.94 522.767,1291.3 521.83,1271.7 520.748,1252.14 519.508,1232.63 518.097,1213.18 516.503,1193.78 514.711,1174.45 512.709,1155.18 510.483,1135.98 508.02,1116.85 505.308,1097.8 502.333,1078.83 499.082,1059.95 495.541,1041.16 491.699,1022.46 487.541,1003.86 483.068,985.36 478.293,966.952 473.229,948.634 467.888,930.403 462.285,912.253 456.432,894.18 450.342,876.182 444.029,858.253 437.505,840.389 430.784,822.587 423.879,804.842 416.803,787.15 409.57,769.507 402.191,751.909 394.682,734.352 387.054,716.832 379.321,699.345 371.495,681.886 363.591,664.452 355.622,647.038 347.599,629.641 339.537,612.256 331.449,594.879 323.348,577.506 "></polyline>
-<polyline clip-path="url(#clip352)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="322.432,611.034 323.348,577.506 349.621,598.356 "></polyline>
-<polyline clip-path="url(#clip352)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="323.348,577.506 331.449,594.879 "></polyline>
-<polyline clip-path="url(#clip352)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="527.079,1488.89 541.317,1487.67 555.549,1486.44 569.769,1485.18 583.971,1483.89 598.148,1482.55 612.296,1481.14 626.408,1479.66 640.477,1478.1 654.499,1476.43 668.466,1474.66 682.373,1472.76 696.214,1470.73 709.983,1468.55 723.673,1466.21 737.28,1463.69 750.796,1461 764.216,1458.1 777.533,1455 790.743,1451.67 803.838,1448.11 816.813,1444.3 829.662,1440.23 842.378,1435.9 854.956,1431.28 867.39,1426.36 879.68,1421.15 891.831,1415.65 903.85,1409.89 915.743,1403.86 927.516,1397.59 939.174,1391.09 950.724,1384.36 962.172,1377.42 973.523,1370.29 984.785,1362.97 995.962,1355.48 1007.06,1347.83 1018.09,1340.03 1029.05,1332.1 1039.95,1324.04 1050.8,1315.87 1061.59,1307.6 1072.35,1299.25 1083.07,1290.82 1093.76,1282.33 1104.43,1273.8 1115.07,1265.22 1125.71,1256.62 1136.34,1248.01 "></polyline>
-<polyline clip-path="url(#clip352)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="1103.59,1255.24 1136.34,1248.01 1122.47,1278.55 "></polyline>
-<polyline clip-path="url(#clip352)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="1136.34,1248.01 1125.71,1256.62 "></polyline>
-<polyline clip-path="url(#clip352)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="935.562,319.46 935.812,339.32 936.076,359.177 936.365,379.025 936.694,398.86 937.076,418.679 937.523,438.478 938.049,458.252 938.667,477.997 939.39,497.71 940.231,517.385 941.204,537.02 942.322,556.609 943.597,576.148 945.043,595.635 946.673,615.064 948.5,634.431 950.537,653.732 952.797,672.964 955.295,692.122 958.042,711.201 961.051,730.199 964.337,749.11 967.912,767.931 971.789,786.657 975.981,805.284 980.487,823.814 985.296,842.249 990.394,860.593 995.768,878.851 1001.41,897.027 1007.29,915.125 1013.41,933.149 1019.76,951.103 1026.32,968.991 1033.07,986.818 1040.01,1004.59 1047.12,1022.3 1054.38,1039.97 1061.8,1057.59 1069.34,1075.17 1077,1092.71 1084.76,1110.22 1092.62,1127.71 1100.56,1145.16 1108.56,1162.6 1116.61,1180.02 1124.71,1197.43 1132.83,1214.82 1140.96,1232.22 "></polyline>
-<polyline clip-path="url(#clip352)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="1141.84,1198.69 1140.96,1232.22 1114.67,1211.4 "></polyline>
-<polyline clip-path="url(#clip352)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="1140.96,1232.22 1132.83,1214.82 "></polyline>
-<polyline clip-path="url(#clip352)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="1144.86,1242.4 1153.25,1254.62 1161.65,1266.82 1170.06,1279 1178.49,1291.15 1186.96,1303.25 1195.46,1315.29 1204.02,1327.27 1212.62,1339.17 1221.29,1350.98 1230.04,1362.69 1238.86,1374.29 1247.76,1385.76 1256.76,1397.1 1265.87,1408.29 1275.08,1419.32 1284.41,1430.19 1293.87,1440.87 1303.46,1451.37 1313.2,1461.66 1323.08,1471.74 1333.12,1481.59 1343.33,1491.21 1353.71,1500.58 1364.27,1509.69 1375.01,1518.54 1385.95,1527.11 1397.07,1535.43 1408.36,1543.5 1419.82,1551.33 1431.43,1558.94 1443.2,1566.33 1455.1,1573.52 1467.14,1580.52 1479.31,1587.35 1491.59,1594 1503.99,1600.49 1516.48,1606.84 1529.07,1613.06 1541.75,1619.15 1554.51,1625.13 1567.33,1631 1580.22,1636.79 1593.17,1642.5 1606.16,1648.14 1619.19,1653.73 1632.26,1659.27 1645.34,1664.78 1658.45,1670.26 1671.56,1675.73 "></polyline>
-<polyline clip-path="url(#clip352)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="1649.65,1650.33 1671.56,1675.73 1638.09,1678.02 "></polyline>
-<polyline clip-path="url(#clip352)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="1671.56,1675.73 1658.45,1670.26 "></polyline>
-<path clip-path="url(#clip352)" d="M331.22 567.322 L325.34 557.137 L313.58 557.137 L307.7 567.322 L313.58 577.506 L325.34 577.506 L331.22 567.322 L331.22 567.322  Z" fill="#009af9" fill-rule="evenodd" fill-opacity="1"></path>
-<polyline clip-path="url(#clip352)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="331.22,567.322 325.34,557.137 313.58,557.137 307.7,567.322 313.58,577.506 325.34,577.506 331.22,567.322 "></polyline>
-<path clip-path="url(#clip352)" d="M538.839 1488.89 L532.959 1478.71 L521.2 1478.71 L515.32 1488.89 L521.2 1499.07 L532.959 1499.07 L538.839 1488.89 L538.839 1488.89  Z" fill="#009af9" fill-rule="evenodd" fill-opacity="1"></path>
-<polyline clip-path="url(#clip352)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="538.839,1488.89 532.959,1478.71 521.2,1478.71 515.32,1488.89 521.2,1499.07 532.959,1499.07 538.839,1488.89 "></polyline>
-<path clip-path="url(#clip352)" d="M947.322 319.46 L941.442 309.276 L929.682 309.276 L923.803 319.46 L929.682 329.644 L941.442 329.644 L947.322 319.46 L947.322 319.46  Z" fill="#009af9" fill-rule="evenodd" fill-opacity="1"></path>
-<polyline clip-path="url(#clip352)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="947.322,319.46 941.442,309.276 929.682,309.276 923.803,319.46 929.682,329.644 941.442,329.644 947.322,319.46 "></polyline>
-<path clip-path="url(#clip352)" d="M1156.62 1242.4 L1150.74 1232.22 L1138.98 1232.22 L1133.1 1242.4 L1138.98 1252.59 L1150.74 1252.59 L1156.62 1242.4 L1156.62 1242.4  Z" fill="#009af9" fill-rule="evenodd" fill-opacity="1"></path>
-<polyline clip-path="url(#clip352)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="1156.62,1242.4 1150.74,1232.22 1138.98,1232.22 1133.1,1242.4 1138.98,1252.59 1150.74,1252.59 1156.62,1242.4 "></polyline>
-<path clip-path="url(#clip352)" d="M1692.3 1680.54 L1686.42 1670.36 L1674.66 1670.36 L1668.78 1680.54 L1674.66 1690.72 L1686.42 1690.72 L1692.3 1680.54 L1692.3 1680.54  Z" fill="#009af9" fill-rule="evenodd" fill-opacity="1"></path>
-<polyline clip-path="url(#clip352)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="1692.3,1680.54 1686.42,1670.36 1674.66,1670.36 1668.78,1680.54 1674.66,1690.72 1686.42,1690.72 1692.3,1680.54 "></polyline>
-<circle clip-path="url(#clip352)" style="fill:#009af9; stroke:none; fill-opacity:0" cx="319.46" cy="567.322" r="2"></circle>
-<circle clip-path="url(#clip352)" style="fill:#009af9; stroke:none; fill-opacity:0" cx="527.079" cy="1488.89" r="2"></circle>
-<circle clip-path="url(#clip352)" style="fill:#009af9; stroke:none; fill-opacity:0" cx="935.562" cy="319.46" r="2"></circle>
-<circle clip-path="url(#clip352)" style="fill:#009af9; stroke:none; fill-opacity:0" cx="1144.86" cy="1242.4" r="2"></circle>
-<circle clip-path="url(#clip352)" style="fill:#009af9; stroke:none; fill-opacity:0" cx="1680.54" cy="1680.54" r="2"></circle>
-<path clip-path="url(#clip350)" d="M322.481 565.16 L320.137 568.314 L322.602 571.642 L321.347 571.642 L319.46 569.095 L317.574 571.642 L316.318 571.642 L318.835 568.25 L316.532 565.16 L317.788 565.16 L319.506 567.469 L321.225 565.16 L322.481 565.16 Z" fill="#000000" fill-rule="nonzero" fill-opacity="1"></path><path clip-path="url(#clip350)" d="M523.925 1486.73 L525.054 1486.73 L527.079 1492.17 L529.105 1486.73 L530.233 1486.73 L527.803 1493.21 L526.356 1493.21 L523.925 1486.73 Z" fill="#000000" fill-rule="nonzero" fill-opacity="1"></path><path clip-path="url(#clip350)" d="M931.213 317.299 L932.278 317.299 L933.609 322.356 L934.934 317.299 L936.19 317.299 L937.521 322.356 L938.846 317.299 L939.911 317.299 L938.216 323.78 L936.96 323.78 L935.565 318.468 L934.165 323.78 L932.909 323.78 L931.213 317.299 Z" fill="#000000" fill-rule="nonzero" fill-opacity="1"></path><path clip-path="url(#clip350)" d="M1142.41 1240.24 L1147.47 1240.24 L1147.47 1241.22 L1143.46 1245.87 L1147.47 1245.87 L1147.47 1246.72 L1142.26 1246.72 L1142.26 1245.75 L1146.27 1241.09 L1142.41 1241.09 L1142.41 1240.24 Z" fill="#000000" fill-rule="nonzero" fill-opacity="1"></path><path clip-path="url(#clip350)" d="M1682.67 1678.57 L1682.67 1679.58 Q1682.22 1679.34 1681.73 1679.23 Q1681.25 1679.11 1680.73 1679.11 Q1679.93 1679.11 1679.53 1679.36 Q1679.14 1679.6 1679.14 1680.09 Q1679.14 1680.46 1679.42 1680.67 Q1679.71 1680.88 1680.56 1681.07 L1680.93 1681.15 Q1682.06 1681.39 1682.54 1681.84 Q1683.02 1682.28 1683.02 1683.07 Q1683.02 1683.97 1682.3 1684.5 Q1681.59 1685.03 1680.34 1685.03 Q1679.82 1685.03 1679.25 1684.92 Q1678.69 1684.83 1678.06 1684.62 L1678.06 1683.52 Q1678.65 1683.83 1679.23 1683.99 Q1679.8 1684.14 1680.36 1684.14 Q1681.11 1684.14 1681.52 1683.88 Q1681.92 1683.62 1681.92 1683.15 Q1681.92 1682.72 1681.63 1682.49 Q1681.34 1682.26 1680.35 1682.04 L1679.98 1681.95 Q1678.99 1681.75 1678.55 1681.32 Q1678.11 1680.88 1678.11 1680.13 Q1678.11 1679.22 1678.76 1678.72 Q1679.41 1678.22 1680.6 1678.22 Q1681.19 1678.22 1681.71 1678.31 Q1682.23 1678.4 1682.67 1678.57 Z" fill="#000000" fill-rule="nonzero" fill-opacity="1"></path></svg>
+<polyline clip-path="url(#clip622)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="319.46,567.322 334.671,565.41 349.866,563.492 365.03,561.562 380.145,559.616 395.196,557.647 410.166,555.649 425.041,553.618 439.803,551.546 454.438,549.428 468.927,547.26 483.257,545.034 497.41,542.746 511.371,540.389 525.124,537.958 538.652,535.448 551.939,532.852 564.971,530.164 577.729,527.38 590.199,524.493 602.365,521.498 614.21,518.389 625.718,515.16 636.874,511.806 647.661,508.321 658.064,504.699 668.083,500.94 677.733,497.051 687.031,493.036 695.992,488.901 704.632,484.653 712.968,480.296 721.015,475.836 728.79,471.28 736.308,466.632 743.586,461.899 750.639,457.086 757.484,452.199 764.137,447.244 770.613,442.226 776.93,437.151 783.101,432.024 789.145,426.852 795.076,421.64 800.911,416.394 806.666,411.12 812.357,405.822 818,400.508 823.611,395.182 829.205,389.85 "></polyline>
+<polyline clip-path="url(#clip622)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="797.14,399.688 829.205,389.85 817.836,421.405 "></polyline>
+<polyline clip-path="url(#clip622)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="829.205,389.85 823.611,395.182 "></polyline>
+<polyline clip-path="url(#clip622)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="527.079,1488.89 526.41,1467.87 525.731,1446.87 525.036,1425.9 524.314,1404.97 523.559,1384.11 522.76,1363.33 521.91,1342.65 521,1322.08 520.021,1301.64 518.965,1281.34 517.823,1261.2 516.586,1241.24 515.247,1221.47 513.796,1201.91 512.224,1182.58 510.524,1163.48 508.687,1144.64 506.703,1126.08 504.565,1107.8 502.264,1089.83 499.791,1072.17 497.138,1054.86 494.296,1037.9 491.256,1021.3 488.011,1005.09 484.56,989.267 480.911,973.811 477.074,958.707 473.056,943.94 468.867,929.494 464.514,915.353 460.007,901.5 455.354,887.919 450.564,874.596 445.644,861.512 440.605,848.654 435.454,836.004 430.2,823.546 424.851,811.264 419.417,799.143 413.905,787.167 408.324,775.318 402.684,763.582 396.992,751.942 391.257,740.382 385.488,728.887 379.692,717.439 373.88,706.024 368.059,694.624 "></polyline>
+<polyline clip-path="url(#clip622)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="368.343,728.164 368.059,694.624 395.062,714.521 "></polyline>
+<polyline clip-path="url(#clip622)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="368.059,694.624 373.88,706.024 "></polyline>
+<polyline clip-path="url(#clip622)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="527.079,1488.89 542.316,1487.01 557.537,1485.13 572.725,1483.24 587.866,1481.33 602.942,1479.39 617.938,1477.43 632.839,1475.44 647.627,1473.4 662.287,1471.32 676.803,1469.18 691.159,1466.99 705.338,1464.73 719.326,1462.41 733.105,1460.01 746.66,1457.53 759.975,1454.96 773.034,1452.3 785.82,1449.55 798.319,1446.69 810.513,1443.72 822.386,1440.64 833.924,1437.43 845.109,1434.1 855.926,1430.64 866.359,1427.04 876.409,1423.3 886.09,1419.43 895.419,1415.43 904.411,1411.31 913.084,1407.08 921.452,1402.74 929.532,1398.29 937.339,1393.75 944.891,1389.11 952.202,1384.39 959.289,1379.59 966.168,1374.71 972.854,1369.76 979.365,1364.75 985.715,1359.69 991.922,1354.57 998,1349.4 1003.97,1344.2 1009.84,1338.96 1015.63,1333.69 1021.35,1328.4 1027.03,1323.09 1032.68,1317.77 1038.3,1312.44 "></polyline>
+<polyline clip-path="url(#clip622)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="1006.2,1322.16 1038.3,1312.44 1026.82,1343.96 "></polyline>
+<polyline clip-path="url(#clip622)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="1038.3,1312.44 1032.68,1317.77 "></polyline>
+<polyline clip-path="url(#clip622)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="935.562,319.46 936.269,340.513 936.985,361.551 937.718,382.556 938.477,403.513 939.269,424.406 940.105,445.219 940.992,465.935 941.939,486.539 942.954,507.014 944.047,527.345 945.225,547.516 946.498,567.509 947.873,587.31 949.359,606.903 950.966,626.27 952.701,645.397 954.573,664.267 956.59,682.864 958.762,701.172 961.096,719.175 963.602,736.857 966.288,754.202 969.162,771.193 972.233,787.815 975.509,804.053 978.99,819.906 982.669,835.39 986.535,850.52 990.582,865.313 994.8,879.786 999.181,893.953 1003.72,907.831 1008.4,921.436 1013.21,934.785 1018.16,947.892 1023.23,960.775 1028.4,973.449 1033.68,985.93 1039.06,998.235 1044.52,1010.38 1050.05,1022.38 1055.66,1034.25 1061.32,1046.01 1067.04,1057.67 1072.8,1069.25 1078.59,1080.77 1084.41,1092.24 1090.25,1103.68 1096.1,1115.1 "></polyline>
+<polyline clip-path="url(#clip622)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="1095.78,1081.56 1096.1,1115.1 1069.08,1095.23 "></polyline>
+<polyline clip-path="url(#clip622)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="1096.1,1115.1 1090.25,1103.68 "></polyline>
+<polyline clip-path="url(#clip622)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="1144.86,1242.4 1154.3,1255.18 1163.74,1267.94 1173.17,1280.67 1182.6,1293.34 1192.01,1305.95 1201.41,1318.48 1210.79,1330.9 1220.16,1343.2 1229.5,1355.37 1238.82,1367.39 1248.12,1379.24 1257.38,1390.9 1266.61,1402.36 1275.81,1413.61 1284.97,1424.61 1294.09,1435.36 1303.17,1445.84 1312.2,1456.04 1321.18,1465.93 1330.11,1475.5 1338.99,1484.74 1347.82,1493.61 1356.58,1502.12 1365.29,1510.24 1373.93,1517.96 1382.5,1525.27 1391.02,1532.19 1399.48,1538.74 1407.88,1544.94 1416.22,1550.8 1424.52,1556.34 1432.77,1561.57 1440.97,1566.52 1449.13,1571.2 1457.25,1575.62 1465.34,1579.81 1473.39,1583.78 1481.4,1587.55 1489.39,1591.13 1497.35,1594.54 1505.29,1597.8 1513.2,1600.93 1521.1,1603.93 1528.98,1606.84 1536.85,1609.66 1544.71,1612.42 1552.56,1615.12 1560.4,1617.79 1568.24,1620.44 "></polyline>
+<polyline clip-path="url(#clip622)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="1544.63,1596.62 1568.24,1620.44 1535.02,1625.04 "></polyline>
+<polyline clip-path="url(#clip622)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="1568.24,1620.44 1560.4,1617.79 "></polyline>
+<path clip-path="url(#clip622)" d="M466.457 567.322 L392.958 440.019 L245.962 440.019 L172.463 567.322 L245.962 694.624 L392.958 694.624 L466.457 567.322 L466.457 567.322  Z" fill="#009af9" fill-rule="evenodd" fill-opacity="1"></path>
+<polyline clip-path="url(#clip622)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="466.457,567.322 392.958,440.019 245.962,440.019 172.463,567.322 245.962,694.624 392.958,694.624 466.457,567.322 "></polyline>
+<path clip-path="url(#clip622)" d="M674.076 1488.89 L600.578 1361.59 L453.581 1361.59 L380.083 1488.89 L453.581 1616.19 L600.578 1616.19 L674.076 1488.89 L674.076 1488.89  Z" fill="#009af9" fill-rule="evenodd" fill-opacity="1"></path>
+<polyline clip-path="url(#clip622)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="674.076,1488.89 600.578,1361.59 453.581,1361.59 380.083,1488.89 453.581,1616.19 600.578,1616.19 674.076,1488.89 "></polyline>
+<path clip-path="url(#clip622)" d="M1082.56 319.46 L1009.06 192.157 L862.064 192.157 L788.566 319.46 L862.064 446.763 L1009.06 446.763 L1082.56 319.46 L1082.56 319.46  Z" fill="#009af9" fill-rule="evenodd" fill-opacity="1"></path>
+<polyline clip-path="url(#clip622)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="1082.56,319.46 1009.06,192.157 862.064,192.157 788.566,319.46 862.064,446.763 1009.06,446.763 1082.56,319.46 "></polyline>
+<path clip-path="url(#clip622)" d="M1291.86 1242.4 L1218.36 1115.1 L1071.37 1115.1 L997.868 1242.4 L1071.37 1369.71 L1218.36 1369.71 L1291.86 1242.4 L1291.86 1242.4  Z" fill="#009af9" fill-rule="evenodd" fill-opacity="1"></path>
+<polyline clip-path="url(#clip622)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="1291.86,1242.4 1218.36,1115.1 1071.37,1115.1 997.868,1242.4 1071.37,1369.71 1218.36,1369.71 1291.86,1242.4 "></polyline>
+<path clip-path="url(#clip622)" d="M1827.54 1680.54 L1754.04 1553.24 L1607.04 1553.24 L1533.54 1680.54 L1607.04 1807.84 L1754.04 1807.84 L1827.54 1680.54 L1827.54 1680.54  Z" fill="#009af9" fill-rule="evenodd" fill-opacity="1"></path>
+<polyline clip-path="url(#clip622)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="1827.54,1680.54 1754.04,1553.24 1607.04,1553.24 1533.54,1680.54 1607.04,1807.84 1754.04,1807.84 1827.54,1680.54 "></polyline>
+<circle clip-path="url(#clip622)" style="fill:#009af9; stroke:none; fill-opacity:0" cx="319.46" cy="567.322" r="2"></circle>
+<circle clip-path="url(#clip622)" style="fill:#009af9; stroke:none; fill-opacity:0" cx="527.079" cy="1488.89" r="2"></circle>
+<circle clip-path="url(#clip622)" style="fill:#009af9; stroke:none; fill-opacity:0" cx="935.562" cy="319.46" r="2"></circle>
+<circle clip-path="url(#clip622)" style="fill:#009af9; stroke:none; fill-opacity:0" cx="1144.86" cy="1242.4" r="2"></circle>
+<circle clip-path="url(#clip622)" style="fill:#009af9; stroke:none; fill-opacity:0" cx="1680.54" cy="1680.54" r="2"></circle>
+<path clip-path="url(#clip620)" d="M357.22 540.304 L327.924 579.728 L358.739 621.322 L343.042 621.322 L319.46 589.493 L295.878 621.322 L280.181 621.322 L311.648 578.932 L282.857 540.304 L298.555 540.304 L320.039 569.166 L341.523 540.304 L357.22 540.304 Z" fill="#000000" fill-rule="nonzero" fill-opacity="1"></path><path clip-path="url(#clip620)" d="M487.655 1461.87 L501.761 1461.87 L527.079 1529.87 L552.398 1461.87 L566.503 1461.87 L536.122 1542.89 L518.037 1542.89 L487.655 1461.87 Z" fill="#000000" fill-rule="nonzero" fill-opacity="1"></path><path clip-path="url(#clip620)" d="M881.201 292.442 L894.511 292.442 L911.148 355.665 L927.714 292.442 L943.411 292.442 L960.049 355.665 L976.614 292.442 L989.924 292.442 L968.729 373.46 L953.032 373.46 L935.598 307.054 L918.093 373.46 L902.396 373.46 L881.201 292.442 Z" fill="#000000" fill-rule="nonzero" fill-opacity="1"></path><path clip-path="url(#clip620)" d="M1114.16 1215.39 L1177.38 1215.39 L1177.38 1227.54 L1127.32 1285.77 L1177.38 1285.77 L1177.38 1296.4 L1112.35 1296.4 L1112.35 1284.25 L1162.41 1226.02 L1114.16 1226.02 L1114.16 1215.39 Z" fill="#000000" fill-rule="nonzero" fill-opacity="1"></path><path clip-path="url(#clip620)" d="M1707.16 1655.91 L1707.16 1668.5 Q1701.52 1665.6 1695.44 1664.16 Q1689.37 1662.71 1682.85 1662.71 Q1672.94 1662.71 1667.95 1665.75 Q1663.03 1668.79 1663.03 1674.86 Q1663.03 1679.49 1666.58 1682.17 Q1670.12 1684.77 1680.83 1687.16 L1685.39 1688.17 Q1699.56 1691.21 1705.5 1696.78 Q1711.5 1702.28 1711.5 1712.19 Q1711.5 1723.47 1702.53 1730.06 Q1693.63 1736.64 1678.01 1736.64 Q1671.5 1736.64 1664.41 1735.34 Q1657.39 1734.11 1649.58 1731.57 L1649.58 1717.83 Q1656.96 1721.66 1664.12 1723.62 Q1671.28 1725.5 1678.3 1725.5 Q1687.7 1725.5 1692.76 1722.31 Q1697.83 1719.06 1697.83 1713.2 Q1697.83 1707.78 1694.14 1704.88 Q1690.52 1701.99 1678.15 1699.31 L1673.52 1698.23 Q1661.15 1695.62 1655.66 1690.27 Q1650.16 1684.84 1650.16 1675.44 Q1650.16 1664.01 1658.26 1657.79 Q1666.36 1651.57 1681.26 1651.57 Q1688.64 1651.57 1695.15 1652.65 Q1701.66 1653.74 1707.16 1655.91 Z" fill="#000000" fill-rule="nonzero" fill-opacity="1"></path></svg>
 </div>
 </div>
 <p>So, our goal was given the DAG provided by the <code>ges</code> method in the causal discovery <span class="citation" data-cites="chickering2003optimal">(<a href="#ref-chickering2003optimal" role="doc-biblioref">Chickering 2003</a>)</span>, generate equations that rules each of these causal relations, represented in the DAG as directed edges. The SCM is the union of the DAG and these causal equations, that is, the SCM is a tuple <span class="math inline">\((G, \mathbf{f})\)</span>, where <span class="math inline">\(G\)</span> is the DAG and <span class="math inline">\(\mathbf{f}\)</span> is the set of functions that generates the value of each variable given its parents.</p>
@@ -501,6 +505,34 @@ b_n
 </section>
 <section id="counterfactualexplanations.jl" class="level3">
 <h3 class="anchored" data-anchor-id="counterfactualexplanations.jl"><code>CounterfactualExplanations.jl</code></h3>
+<p>Now, we need to go into the optimization problem previously described. We seek to minimize the lagrangian function we defined where now we have a differentiable function. The standard way to implement generators in <code>CounterfactualExplanations.jl</code> is to use <code>AutoDiff</code> exactly using composable functions in the lagrangian. The definition of <span class="math inline">\(\mathcal{L_{\texttt{MINT}}}\)</span> is in the same shape of the the others gradient-based generators in the package, so the optimization is straightforward. However, we needed some way to pass the <span class="math inline">\(x_F\)</span> into the <span class="math inline">\(x_{SCF}\)</span> and that’s where <code>transformer.jl</code> comes in. This is where <code>InputTransformer</code>s are defined in the package and in some way this is what we are doing, we are passing our factual to the “latent” causal space of the counterfactual. Our first step is to create a new kind of <code>InputTransformer</code> that is the SCM itself,</p>
+<div id="6" class="cell" data-execution_count="1">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource julia number-lines code-with-copy"><code class="sourceCode julia"><span id="cb4-1"><a href="#cb4-1"></a><span class="kw">const</span> TypedInputTransformer <span class="op">=</span> <span class="dt">Union</span>{</span>
+<span id="cb4-2"><a href="#cb4-2"></a>    <span class="dt">Type</span>{<span class="op">&lt;:</span><span class="dt">StatsBase.AbstractDataTransform</span>},</span>
+<span id="cb4-3"><a href="#cb4-3"></a>    <span class="dt">Type</span>{<span class="op">&lt;:</span><span class="dt">MultivariateStats.AbstractDimensionalityReduction</span>},</span>
+<span id="cb4-4"><a href="#cb4-4"></a>    <span class="dt">Type</span>{<span class="op">&lt;:</span><span class="dt">GenerativeModels.AbstractGenerativeModel</span>},</span>
+<span id="cb4-5"><a href="#cb4-5"></a>    <span class="dt">Type</span>{<span class="op">&lt;:</span><span class="dt">CausalInference.SCM</span>} <span class="co"># The SCM transfromer</span></span>
+<span id="cb4-6"><a href="#cb4-6"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>and then we need a way to create this transformer, that’s where we “overload” <code>fit_transformer</code> using <code>CausalInferece.jl</code>,</p>
+<div id="8" class="cell" data-execution_count="1">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource julia number-lines code-with-copy"><code class="sourceCode julia"><span id="cb5-1"><a href="#cb5-1"></a><span class="kw">function</span> <span class="fu">fit_transformer</span>(</span>
+<span id="cb5-2"><a href="#cb5-2"></a>    data<span class="op">::</span><span class="dt">CounterfactualData</span>, input_encoder<span class="op">::</span><span class="dt">Type{&lt;:CausalInference.SCM}</span>; kwargs<span class="op">...</span></span>
+<span id="cb5-3"><a href="#cb5-3"></a>)</span>
+<span id="cb5-4"><a href="#cb5-4"></a>    t <span class="op">=</span> Tables.<span class="fu">table</span>(<span class="fu">transpose</span>(data.X))</span>
+<span id="cb5-5"><a href="#cb5-5"></a>    est_g, score <span class="op">=</span> CausalInference.<span class="fu">ges</span>(t; penalty<span class="op">=</span><span class="fl">1.0</span>, parallel<span class="op">=</span><span class="cn">true</span>)</span>
+<span id="cb5-6"><a href="#cb5-6"></a>    est_dag <span class="op">=</span> CausalInference.<span class="fu">pdag2dag!</span>(est_g)</span>
+<span id="cb5-7"><a href="#cb5-7"></a>    scm <span class="op">=</span> CausalInference.<span class="fu">estimate_equations</span>(t, est_dag)</span>
+<span id="cb5-8"><a href="#cb5-8"></a>    <span class="cf">return</span> scm</span>
+<span id="cb5-9"><a href="#cb5-9"></a><span class="kw">end</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>… We are getting there! However, now comes the hardest part, where this is placed?</p>
 </section>
 </section>
 </section>
@@ -1006,238 +1038,271 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
   }
 });
 </script>
-<script src="https://utteranc.es/client.js" repo="pat-alt/pat-alt.github.io" issue-term="pathname" theme="github-light" crossorigin="anonymous" async="">
+<script src="https://utteranc.es/client.js" repo="JuliaTrustworthyAI/.github" issue-term="pathname" theme="github-light" crossorigin="anonymous" async="">
 </script><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
-<div class="sourceCode" id="cb4" data-shortcodes="false"><pre class="sourceCode numberSource markdown number-lines code-with-copy"><code class="sourceCode markdown"><span id="cb4-1"><a href="#cb4-1"></a><span class="co">---</span></span>
-<span id="cb4-2"><a href="#cb4-2"></a><span class="an">title:</span><span class="co"> "When Causality meets Recourse"</span></span>
-<span id="cb4-3"><a href="#cb4-3"></a><span class="an">subtitle:</span><span class="co"> "Counterfactual Explanations through Structural Causal Models"</span></span>
-<span id="cb4-4"><a href="#cb4-4"></a><span class="an">date:</span><span class="co"> '2024-09-17'</span></span>
-<span id="cb4-5"><a href="#cb4-5"></a><span class="an">description:</span><span class="co"> |</span></span>
-<span id="cb4-6"><a href="#cb4-6"></a><span class="co">    This post introduces a new tool in CounterfactualExplanations.jl, enhancing the package with causal reasoning to generate counterfactual explanations.</span></span>
-<span id="cb4-7"><a href="#cb4-7"></a><span class="an">author:</span><span class="co"> </span></span>
-<span id="cb4-8"><a href="#cb4-8"></a><span class="co">    - name: Jorge Luiz Franco </span></span>
-<span id="cb4-9"><a href="#cb4-9"></a><span class="co">      url: https://www.linkedin.com/in/jorgelwyz/</span></span>
-<span id="cb4-10"><a href="#cb4-10"></a><span class="an">categories:</span></span>
-<span id="cb4-11"><a href="#cb4-11"></a><span class="co">  - counterfactuals</span></span>
-<span id="cb4-12"><a href="#cb4-12"></a><span class="co">  - explainable AI</span></span>
-<span id="cb4-13"><a href="#cb4-13"></a><span class="co">  - causality</span></span>
-<span id="cb4-14"><a href="#cb4-14"></a><span class="co">  - Julia</span></span>
-<span id="cb4-15"><a href="#cb4-15"></a><span class="an">image:</span><span class="co"> www/intro.png</span></span>
-<span id="cb4-16"><a href="#cb4-16"></a><span class="an">execute:</span></span>
-<span id="cb4-17"><a href="#cb4-17"></a><span class="co">  eval: true</span></span>
-<span id="cb4-18"><a href="#cb4-18"></a><span class="co">  echo: true</span></span>
-<span id="cb4-19"><a href="#cb4-19"></a><span class="an">engine:</span><span class="co"> julia</span></span>
-<span id="cb4-20"><a href="#cb4-20"></a><span class="an">julia:</span><span class="co"> </span></span>
-<span id="cb4-21"><a href="#cb4-21"></a><span class="co">  exeflags: ["--project=./"]</span></span>
-<span id="cb4-22"><a href="#cb4-22"></a><span class="an">code-fold:</span><span class="co"> show</span></span>
-<span id="cb4-23"><a href="#cb4-23"></a><span class="co">---</span></span>
-<span id="cb4-24"><a href="#cb4-24"></a></span>
-<span id="cb4-25"><a href="#cb4-25"></a><span class="fu"># Introduction</span></span>
-<span id="cb4-26"><a href="#cb4-26"></a></span>
-<span id="cb4-27"><a href="#cb4-27"></a>In recent years, the need for interpretable and explainable AI has surged, particularly in high-stakes domains. Counterfactual explanations provide a means to understand how changes to input features could alter the outcomes of machine learning models. This blog post presents a new tool in the CounterfactualExplanations.jl package, developed during my JSoC (Julia Summer of Code) project, which incorporates causal reasoning into counterfactual generation.</span>
-<span id="cb4-28"><a href="#cb4-28"></a></span>
-<span id="cb4-29"><a href="#cb4-29"></a><span class="fu"># Project Overview</span></span>
-<span id="cb4-30"><a href="#cb4-30"></a></span>
-<span id="cb4-31"><a href="#cb4-31"></a>This project aimed to enhance the CounterfactualExplanations.jl package by infusing it with a robust mathematical foundation for minimal algorithmic recourse, based on the principles of causal reasoning <span class="co">[</span><span class="ot">@karimi2021algorithmic</span><span class="co">]</span>. </span>
-<span id="cb4-32"><a href="#cb4-32"></a></span>
-<span id="cb4-33"><a href="#cb4-33"></a><span class="fu">## Key Contributions</span></span>
-<span id="cb4-34"><a href="#cb4-34"></a></span>
-<span id="cb4-35"><a href="#cb4-35"></a>During the project, I contributed to two key repositories:</span>
-<span id="cb4-36"><a href="#cb4-36"></a></span>
-<span id="cb4-37"><a href="#cb4-37"></a><span class="ss">1. </span>**CounterfactualExplanations.jl**: Developed a new tool for generating counterfactual explanations using causal information. This allows users to create smarter perturbations rather than random adjustments, ultimately providing more meaningful insights.</span>
-<span id="cb4-38"><a href="#cb4-38"></a></span>
-<span id="cb4-39"><a href="#cb4-39"></a><span class="ss">2. </span>**CausalInference.jl**: Implemented a Structural Causal Model (SCM) structure that extracts information from data, laying the groundwork for the causal reasoning capabilities in CounterfactualExplanations.jl.</span>
-<span id="cb4-40"><a href="#cb4-40"></a></span>
-<span id="cb4-41"><a href="#cb4-41"></a>This was an amazing experience, not just experience contribute to two repositories simultaneously, but also to work with the mantainers of these repos. I learned a lot about the Julia language and the Julia community. This was possible because of the mentorship of Patrick Altmeyer (CounterfactualExplanations) and Moritz Schauer (CausalInference), who guided me throughout the project and are amazing researchers.</span>
-<span id="cb4-42"><a href="#cb4-42"></a></span>
-<span id="cb4-43"><a href="#cb4-43"></a><span class="fu">## The `MINTGenerator`</span></span>
-<span id="cb4-44"><a href="#cb4-44"></a></span>
-<span id="cb4-45"><a href="#cb4-45"></a>In this project, we developed the MINTGenerator, a counterfactual generator based on the Recourse through Minimal</span>
-<span id="cb4-46"><a href="#cb4-46"></a>Intervention (MINT) method proposed by @karimi2021algorithmic.</span>
-<span id="cb4-47"><a href="#cb4-47"></a></span>
-<span id="cb4-48"><a href="#cb4-48"></a><span class="fu">## Description</span></span>
-<span id="cb4-49"><a href="#cb4-49"></a></span>
-<span id="cb4-50"><a href="#cb4-50"></a>The MINTGenerator incorporates causal reeasoning in algorithm recourse to achieve minimal interventions when generating a counterfactual explanation. In this sense, the main ideia is that just perturbating a black box model without taking into account the causal relations in the data can guide to misleading recommendations. Here we now shift to a perspective where every action/pertubation is an intervetion in the causal graph of the problem, thus the change is not made just in the intervened upon variable, but also in its childs in the causal structure. The generator utilizes a Structural Causal Model(SCM) to encode the variables in a way that causal effects are propagated and uses a generic gradient-based generator to create the search path, that is, any gradient-base generator (ECCo, REVISE, Watcher, ...) can be used with the MINT SCM encoder to generate counterfactual samples in latent space for minimal intervetions algorithm recourse.</span>
-<span id="cb4-51"><a href="#cb4-51"></a></span>
-<span id="cb4-52"><a href="#cb4-52"></a>The MINT algorithm minimizes a loss function that combines the causal constraints of the SCM and the distance between the generated counterfactual and the original input. Since we want a gradient-based generator, we need to pass the constrained optimizaiton problem into an unconstrained one and we do this by using the Lagrangian. Initially, as defined in <span class="co">[</span><span class="ot">@karimi2021algorithmic</span><span class="co">]</span>, we aim to aim to find the minimal cost set of actions $A$ (in the form of structural interventions) that results in a counterfactual instance yielding the favorable output from $h$,</span>
-<span id="cb4-53"><a href="#cb4-53"></a></span>
-<span id="cb4-54"><a href="#cb4-54"></a>$$</span>
-<span id="cb4-55"><a href="#cb4-55"></a>\begin{aligned}</span>
-<span id="cb4-56"><a href="#cb4-56"></a></span>
-<span id="cb4-57"><a href="#cb4-57"></a>A^* \in \arg\min_A \text{cost}(A; \mathbf{x}_F)<span class="sc">\\</span></span>
-<span id="cb4-58"><a href="#cb4-58"></a>\textrm{s.t.} \quad  h(\mathbf{x}_{SCF}) \neq h(\mathbf{x}_F) \; \; \text{,}<span class="sc">\\</span></span>
-<span id="cb4-59"><a href="#cb4-59"></a></span>
-<span id="cb4-60"><a href="#cb4-60"></a>\end{aligned} </span>
-<span id="cb4-61"><a href="#cb4-61"></a>$$</span>
-<span id="cb4-62"><a href="#cb4-62"></a></span>
-<span id="cb4-63"><a href="#cb4-63"></a>where $\mathbf{x}_F$ is the original input, $\mathbf{x}_{SCF}$ is the counterfactual instance, and $h$ is the black-box model. We use the $\mathbf{x}_{SCF}$ terminology because the counterfactual is derived from the SCM,</span>
-<span id="cb4-64"><a href="#cb4-64"></a></span>
-<span id="cb4-65"><a href="#cb4-65"></a>$$</span>
-<span id="cb4-66"><a href="#cb4-66"></a>x_{SCF_i} = </span>
-<span id="cb4-67"><a href="#cb4-67"></a>\begin{cases}</span>
-<span id="cb4-68"><a href="#cb4-68"></a>x_{F_i} + \delta_i, &amp; \text{if } i \in I <span class="sc">\\</span></span>
-<span id="cb4-69"><a href="#cb4-69"></a>x_{F_i} + f_i(\text{pa}_{SCF_i}) - f_i(\text{pa}_{F_i}), &amp; \text{if } i \notin I  \; \; \text{,}</span>
-<span id="cb4-70"><a href="#cb4-70"></a>\end{cases} </span>
-<span id="cb4-71"><a href="#cb4-71"></a>$$</span>
-<span id="cb4-72"><a href="#cb4-72"></a></span>
-<span id="cb4-73"><a href="#cb4-73"></a>where $I$ is the set of intervened upon variables, $f_i$ is the function that generates the value of the variable $i$ given its parents, and $\text{pa}_{SCF_i}$ and $\text{pa}_{F_i}$ are the parents of the variable $i$ in the counterfactual and original instance, respectively. This closed formula for the decision variable $\mathbf{x}_{SCF}$ is what makes possible to use a gradient-based generator, since with it the lagrangian is differentiable,</span>
-<span id="cb4-74"><a href="#cb4-74"></a></span>
-<span id="cb4-75"><a href="#cb4-75"></a>$$</span>
-<span id="cb4-76"><a href="#cb4-76"></a>\mathcal{L}(A ; \lambda) = \text{cost}(A; \mathbf{x}_F) + \lambda \left(h(\mathbf{x}_{SCF}) - h(\mathbf{x}_F) \right) \; \; \text{,}</span>
-<span id="cb4-77"><a href="#cb4-77"></a>$$</span>
-<span id="cb4-78"><a href="#cb4-78"></a></span>
-<span id="cb4-79"><a href="#cb4-79"></a>or in simple terms and more standard, since $\lambda$ is constant,</span>
-<span id="cb4-80"><a href="#cb4-80"></a></span>
-<span id="cb4-81"><a href="#cb4-81"></a>$$</span>
-<span id="cb4-82"><a href="#cb4-82"></a>\mathcal{L_{\texttt{MINT}}}(\mathbf{x}_{SCF}) = \lambda \text{cost}(\mathbf{x}_{SCF}; \mathbf{x}_F) + \text{yloss}(\mathbf{x}_{SCF},y^*) \; \; \text{,}</span>
-<span id="cb4-83"><a href="#cb4-83"></a>$$</span>
-<span id="cb4-84"><a href="#cb4-84"></a></span>
-<span id="cb4-85"><a href="#cb4-85"></a>where $y^*$ is clearly $h(x_F)$ and $\text{yloss}$ is : </span>
-<span id="cb4-86"><a href="#cb4-86"></a></span>
-<span id="cb4-87"><a href="#cb4-87"></a>$$</span>
-<span id="cb4-88"><a href="#cb4-88"></a>\text{yloss}(\mathbf{x}_{SCF}, y^*) = h \left(\left\{ x_{F_i} + \delta_i [i \in I] + \left(f_i(\text{pa}_{SCF_i}) - f_i(\text{pa}_{F_i}) \right) [i \notin I] \right\}_{i=1}^n \right) - y^* \; \; \text{.} </span>
-<span id="cb4-89"><a href="#cb4-89"></a>$$</span>
-<span id="cb4-90"><a href="#cb4-90"></a></span>
-<span id="cb4-91"><a href="#cb4-91"></a><span class="fu">## Implementation</span></span>
-<span id="cb4-92"><a href="#cb4-92"></a></span>
-<span id="cb4-93"><a href="#cb4-93"></a><span class="fu">### `CausalInference.jl`</span></span>
-<span id="cb4-94"><a href="#cb4-94"></a></span>
-<span id="cb4-95"><a href="#cb4-95"></a>In terms of implementation, we need to capture the causal relations from the data, that's where <span class="in">`CausalInference.jl`</span> comes in. However, before the project, the package did not have a SCM structure, in the sense that the methods just captured the topological Directed Acyclic Graph (DAG) that showed the causality ruling the data, that is, no causal structural equations were provided,</span>
-<span id="cb4-96"><a href="#cb4-96"></a></span>
-<span id="cb4-99"><a href="#cb4-99"></a><span class="in">```{julia}</span></span>
-<span id="cb4-100"><a href="#cb4-100"></a><span class="in">#| output: true</span></span>
-<span id="cb4-101"><a href="#cb4-101"></a></span>
-<span id="cb4-102"><a href="#cb4-102"></a><span class="in">using CausalInference</span></span>
-<span id="cb4-103"><a href="#cb4-103"></a><span class="in">using Plots, GraphRecipes</span></span>
-<span id="cb4-104"><a href="#cb4-104"></a><span class="in">using Random</span></span>
-<span id="cb4-105"><a href="#cb4-105"></a><span class="in">Random.seed!(1)</span></span>
-<span id="cb4-106"><a href="#cb4-106"></a></span>
-<span id="cb4-107"><a href="#cb4-107"></a><span class="in">N = 2000 # number of data points</span></span>
-<span id="cb4-108"><a href="#cb4-108"></a></span>
-<span id="cb4-109"><a href="#cb4-109"></a><span class="in">x = randn(N)</span></span>
-<span id="cb4-110"><a href="#cb4-110"></a><span class="in">v = x + randn(N)*0.25</span></span>
-<span id="cb4-111"><a href="#cb4-111"></a><span class="in">w = x + randn(N)*0.25</span></span>
-<span id="cb4-112"><a href="#cb4-112"></a><span class="in">z = v + w + randn(N)*0.25</span></span>
-<span id="cb4-113"><a href="#cb4-113"></a><span class="in">s = z + randn(N)*0.25</span></span>
-<span id="cb4-114"><a href="#cb4-114"></a></span>
-<span id="cb4-115"><a href="#cb4-115"></a><span class="in">df = (x=x, v=v, w=w, z=z, s=s)</span></span>
-<span id="cb4-116"><a href="#cb4-116"></a></span>
-<span id="cb4-117"><a href="#cb4-117"></a><span class="in">est_g, score = ges(df; penalty=1.0, parallel=true)</span></span>
-<span id="cb4-118"><a href="#cb4-118"></a></span>
-<span id="cb4-119"><a href="#cb4-119"></a><span class="in">plt = graphplot(pdag2dag!(est_g), names= [String(k) for k in keys(df)], size=(500,500), nodesize=0.1, fontsize=2)</span></span>
-<span id="cb4-120"><a href="#cb4-120"></a><span class="in">savefig(plt, "www/intro.png")</span></span>
-<span id="cb4-121"><a href="#cb4-121"></a><span class="in">display(plt)</span></span>
-<span id="cb4-122"><a href="#cb4-122"></a><span class="in">```</span></span>
-<span id="cb4-123"><a href="#cb4-123"></a></span>
-<span id="cb4-124"><a href="#cb4-124"></a>So, our goal was given the DAG provided by the <span class="in">`ges`</span> method in the causal discovery <span class="co">[</span><span class="ot">@chickering2003optimal</span><span class="co">]</span>, generate equations that rules each of these causal relations, represented in the DAG as directed edges. The SCM is the union of the DAG and these causal equations, that is, the SCM is a tuple $(G, \mathbf{f})$, where $G$ is the DAG and $\mathbf{f}$ is the set of functions that generates the value of each variable given its parents. </span>
-<span id="cb4-125"><a href="#cb4-125"></a></span>
-<span id="cb4-126"><a href="#cb4-126"></a>Our solution for constructing the structural causal equations was to assume that the data was generated by a linear model, ie, the causal relations were linear. For the DAG provided in the code example we derive</span>
-<span id="cb4-127"><a href="#cb4-127"></a></span>
-<span id="cb4-128"><a href="#cb4-128"></a>$$ v = \mathcal{b}_v $$</span>
-<span id="cb4-129"><a href="#cb4-129"></a></span>
-<span id="cb4-130"><a href="#cb4-130"></a>$$ x = \mathcal{a}_{v \to x} v + \mathcal{b}_x $$</span>
-<span id="cb4-131"><a href="#cb4-131"></a></span>
-<span id="cb4-132"><a href="#cb4-132"></a>$$ w = \mathcal{a}_{x \to w} x + \mathcal{b}_w $$</span>
-<span id="cb4-133"><a href="#cb4-133"></a></span>
-<span id="cb4-134"><a href="#cb4-134"></a>$$ z = \mathcal{a}_{v \to z} v+ \mathcal{a}_{w \to z} w + \mathcal{b}_z $$</span>
-<span id="cb4-135"><a href="#cb4-135"></a></span>
-<span id="cb4-136"><a href="#cb4-136"></a>$$ s = \mathcal{a}_{z \to s} z + \mathcal{b}_s $$</span>
-<span id="cb4-137"><a href="#cb4-137"></a></span>
-<span id="cb4-138"><a href="#cb4-138"></a>and that's the tricky thing, as we can see these causal equations are different than the ones that generated the data, but they are the ones that respect the causal system obtained from the obtained DAG. Here $\mathcal{b}_i$ and $\mathcal{a}_{i \to j}$ are the intercept term and the coefficient obtained from the linear regression, respectively. To correctly solve the linear regression respecting the dependencies of the causal graph, we use <span class="in">`topological_sort_by_dfs`</span> from <span class="in">`Graphs.jl`</span>.</span>
-<span id="cb4-139"><a href="#cb4-139"></a></span>
-<span id="cb4-140"><a href="#cb4-140"></a>Now, with the SCM structure in hand, we see that the representation could be a struct containing the DAG and the coefficients/intercepts of the causal equations, this maps exactly the tuple $(G, \mathbf{f})$ that we defined. However, since we need these equations to be differentiable, we need to define a function that takes the SCM and returns the value of the variable given its parents and using just the coefficients and the DAG, lead to errors, because <span class="in">`AutoDiff`</span> does not deal well with functions that are conditioned (<span class="in">`if`</span> statements). So, we need to define a way to retrieve the system of causal equations in a smooth way and that's where the <span class="in">`causal_effects`</span> matrix comes to the rescue.</span>
-<span id="cb4-141"><a href="#cb4-141"></a></span>
-<span id="cb4-142"><a href="#cb4-142"></a>Let the factual vector of features be denoted as:</span>
-<span id="cb4-143"><a href="#cb4-143"></a></span>
-<span id="cb4-144"><a href="#cb4-144"></a>$$</span>
-<span id="cb4-145"><a href="#cb4-145"></a>\mathbf{x}_F = </span>
-<span id="cb4-146"><a href="#cb4-146"></a>\begin{bmatrix}</span>
-<span id="cb4-147"><a href="#cb4-147"></a>x_{F_1} <span class="sc">\\</span></span>
-<span id="cb4-148"><a href="#cb4-148"></a>x_{F_2} <span class="sc">\\</span></span>
-<span id="cb4-149"><a href="#cb4-149"></a>x_{F_3} <span class="sc">\\</span></span>
-<span id="cb4-150"><a href="#cb4-150"></a>\vdots <span class="sc">\\</span></span>
-<span id="cb4-151"><a href="#cb4-151"></a>x_{F_n}</span>
-<span id="cb4-152"><a href="#cb4-152"></a>\end{bmatrix}</span>
-<span id="cb4-153"><a href="#cb4-153"></a>$$</span>
-<span id="cb4-154"><a href="#cb4-154"></a></span>
-<span id="cb4-155"><a href="#cb4-155"></a>Let the <span class="in">`causal_effects`</span> matrix be:</span>
-<span id="cb4-156"><a href="#cb4-156"></a></span>
-<span id="cb4-157"><a href="#cb4-157"></a>$$</span>
-<span id="cb4-158"><a href="#cb4-158"></a>\mathbf{C} =</span>
-<span id="cb4-159"><a href="#cb4-159"></a>\begin{bmatrix}</span>
-<span id="cb4-160"><a href="#cb4-160"></a>a_{11} &amp; a_{12} &amp; \cdots &amp; a_{1n} &amp; b_1 <span class="sc">\\</span></span>
-<span id="cb4-161"><a href="#cb4-161"></a>a_{21} &amp; a_{22} &amp; \cdots &amp; a_{2n} &amp; b_2 <span class="sc">\\</span></span>
-<span id="cb4-162"><a href="#cb4-162"></a>a_{31} &amp; a_{32} &amp; \cdots &amp; a_{3n} &amp; b_3 <span class="sc">\\</span></span>
-<span id="cb4-163"><a href="#cb4-163"></a>\vdots &amp; \vdots &amp; \ddots &amp; \vdots &amp; \vdots <span class="sc">\\</span></span>
-<span id="cb4-164"><a href="#cb4-164"></a>a_{n1} &amp; a_{n2} &amp; \cdots &amp; a_{nn} &amp; b_n <span class="sc">\\</span></span>
-<span id="cb4-165"><a href="#cb4-165"></a>\end{bmatrix}</span>
-<span id="cb4-166"><a href="#cb4-166"></a>$$</span>
-<span id="cb4-167"><a href="#cb4-167"></a></span>
-<span id="cb4-168"><a href="#cb4-168"></a>Here, $a_{ij}$ represents the coefficient from the causal effect of $x_{F_j}$ on $x_{F_i}$, and $b_i$ represents the intercept term for the variable $x_{F_i}$.</span>
-<span id="cb4-169"><a href="#cb4-169"></a></span>
-<span id="cb4-170"><a href="#cb4-170"></a>The matrix multiplication of the <span class="in">`causal_effects`</span> matrix with the factual vector (excluding the bias term) is given by:</span>
-<span id="cb4-171"><a href="#cb4-171"></a></span>
-<span id="cb4-172"><a href="#cb4-172"></a>$$</span>
-<span id="cb4-173"><a href="#cb4-173"></a>\mathbf{C}_{:, 1:n} \cdot \mathbf{x}_F =</span>
-<span id="cb4-174"><a href="#cb4-174"></a>\begin{bmatrix}</span>
-<span id="cb4-175"><a href="#cb4-175"></a>a_{11} &amp; a_{12} &amp; \cdots &amp; a_{1n} <span class="sc">\\</span></span>
-<span id="cb4-176"><a href="#cb4-176"></a>a_{21} &amp; a_{22} &amp; \cdots &amp; a_{2n} <span class="sc">\\</span></span>
-<span id="cb4-177"><a href="#cb4-177"></a>a_{31} &amp; a_{32} &amp; \cdots &amp; a_{3n} <span class="sc">\\</span></span>
-<span id="cb4-178"><a href="#cb4-178"></a>\vdots &amp; \vdots &amp; \ddots &amp; \vdots <span class="sc">\\</span></span>
-<span id="cb4-179"><a href="#cb4-179"></a>a_{n1} &amp; a_{n2} &amp; \cdots &amp; a_{nn}</span>
-<span id="cb4-180"><a href="#cb4-180"></a>\end{bmatrix}</span>
-<span id="cb4-181"><a href="#cb4-181"></a>\begin{bmatrix}</span>
-<span id="cb4-182"><a href="#cb4-182"></a>x_{F_1} <span class="sc">\\</span></span>
-<span id="cb4-183"><a href="#cb4-183"></a>x_{F_2} <span class="sc">\\</span></span>
-<span id="cb4-184"><a href="#cb4-184"></a>x_{F_3} <span class="sc">\\</span></span>
-<span id="cb4-185"><a href="#cb4-185"></a>\vdots <span class="sc">\\</span></span>
-<span id="cb4-186"><a href="#cb4-186"></a>x_{F_n}</span>
-<span id="cb4-187"><a href="#cb4-187"></a>\end{bmatrix}</span>
-<span id="cb4-188"><a href="#cb4-188"></a>$$</span>
-<span id="cb4-189"><a href="#cb4-189"></a></span>
-<span id="cb4-190"><a href="#cb4-190"></a>Finally, we add the bias term:</span>
-<span id="cb4-191"><a href="#cb4-191"></a></span>
-<span id="cb4-192"><a href="#cb4-192"></a>$$</span>
-<span id="cb4-193"><a href="#cb4-193"></a>\mathbf{x}_{SCF} = \mathbf{C}_{:, 1:n} \cdot \mathbf{x}_F + </span>
-<span id="cb4-194"><a href="#cb4-194"></a>\begin{bmatrix}</span>
-<span id="cb4-195"><a href="#cb4-195"></a>b_1 <span class="sc">\\</span></span>
-<span id="cb4-196"><a href="#cb4-196"></a>b_2 <span class="sc">\\</span></span>
-<span id="cb4-197"><a href="#cb4-197"></a>b_3 <span class="sc">\\</span></span>
-<span id="cb4-198"><a href="#cb4-198"></a>\vdots <span class="sc">\\</span></span>
-<span id="cb4-199"><a href="#cb4-199"></a>b_n</span>
-<span id="cb4-200"><a href="#cb4-200"></a>\end{bmatrix}</span>
-<span id="cb4-201"><a href="#cb4-201"></a>$$</span>
-<span id="cb4-202"><a href="#cb4-202"></a></span>
-<span id="cb4-203"><a href="#cb4-203"></a>In expanded form:</span>
-<span id="cb4-204"><a href="#cb4-204"></a></span>
-<span id="cb4-205"><a href="#cb4-205"></a>$$</span>
-<span id="cb4-206"><a href="#cb4-206"></a>\mathbf{x}_{SCF_i} = a_{i1} x_{F_1} + a_{i2} x_{F_2} + \cdots + a_{in} x_{F_n} + b_i, \quad \forall i = 1, 2, \dots, n</span>
-<span id="cb4-207"><a href="#cb4-207"></a>$$</span>
-<span id="cb4-208"><a href="#cb4-208"></a></span>
-<span id="cb4-209"><a href="#cb4-209"></a>This equation shows how each counterfactual variable $x_{SCF_i}$ is generated as a linear combination of the factual inputs $x_{F_j}$ based on the causal effects matrix, with an intercept term $b_i$ added for each variable.</span>
-<span id="cb4-210"><a href="#cb4-210"></a></span>
-<span id="cb4-211"><a href="#cb4-211"></a>One can note that the <span class="in">`orphan`</span> nodes, that is, the nodes that do not have parents in the DAG, are going to be equal to the intercept term $\mathcal{b}_\hat{o}$. The intuition behind this is that when we do the linear regression, variables that have no causal parents are just equal to the unconditional mean of the variable, i.e, we get $x_{SCF_\hat{o}} = \mathbb{E}(x_\hat{o})$. Because of this, in some cases a better understanding of the regression is needed, so the residuals are also part of the SCM structure,</span>
-<span id="cb4-212"><a href="#cb4-212"></a></span>
-<span id="cb4-215"><a href="#cb4-215"></a><span class="in">```{julia}</span></span>
-<span id="cb4-216"><a href="#cb4-216"></a><span class="in">#| eval: false</span></span>
-<span id="cb4-217"><a href="#cb4-217"></a></span>
-<span id="cb4-218"><a href="#cb4-218"></a><span class="in">struct SCM</span></span>
-<span id="cb4-219"><a href="#cb4-219"></a><span class="in">    variables::Vector{String}</span></span>
-<span id="cb4-220"><a href="#cb4-220"></a><span class="in">    coefficients::Vector{Vector{Float64}}</span></span>
-<span id="cb4-221"><a href="#cb4-221"></a><span class="in">    residuals::Vector{Vector{Float64}}</span></span>
-<span id="cb4-222"><a href="#cb4-222"></a><span class="in">    dag::DiGraph</span></span>
-<span id="cb4-223"><a href="#cb4-223"></a><span class="in">    causal_effects::Matrix{Float64}</span></span>
-<span id="cb4-224"><a href="#cb4-224"></a><span class="in">end</span></span>
-<span id="cb4-225"><a href="#cb4-225"></a><span class="in">```</span></span>
-<span id="cb4-226"><a href="#cb4-226"></a></span>
-<span id="cb4-227"><a href="#cb4-227"></a><span class="fu">### `CounterfactualExplanations.jl` </span></span>
-<span id="cb4-228"><a href="#cb4-228"></a></span>
-<span id="cb4-229"><a href="#cb4-229"></a></span>
-<span id="cb4-230"><a href="#cb4-230"></a><span class="fu"># Conclusion</span></span>
-<span id="cb4-231"><a href="#cb4-231"></a></span>
-<span id="cb4-232"><a href="#cb4-232"></a><span class="co">&lt;!-- In conclusion, this project has successfully integrated causal reasoning into the CounterfactualExplanations.jl package, providing a valuable tool for generating counterfactual explanations that are not only interpretable but also actionable. --&gt;</span></span>
-<span id="cb4-233"><a href="#cb4-233"></a></span>
-<span id="cb4-234"><a href="#cb4-234"></a><span class="fu"># References</span></span>
+<div class="sourceCode" id="cb6" data-shortcodes="false"><pre class="sourceCode numberSource markdown number-lines code-with-copy"><code class="sourceCode markdown"><span id="cb6-1"><a href="#cb6-1"></a><span class="co">---</span></span>
+<span id="cb6-2"><a href="#cb6-2"></a><span class="an">title:</span><span class="co"> "When Causality meets Recourse"</span></span>
+<span id="cb6-3"><a href="#cb6-3"></a><span class="an">subtitle:</span><span class="co"> "Counterfactual Explanations through Structural Causal Models"</span></span>
+<span id="cb6-4"><a href="#cb6-4"></a><span class="an">date:</span><span class="co"> '2024-09-17'</span></span>
+<span id="cb6-5"><a href="#cb6-5"></a><span class="an">description:</span><span class="co"> |</span></span>
+<span id="cb6-6"><a href="#cb6-6"></a><span class="co">    This post introduces a new tool in CounterfactualExplanations.jl, enhancing the package with causal reasoning to generate counterfactual explanations.</span></span>
+<span id="cb6-7"><a href="#cb6-7"></a><span class="an">author:</span><span class="co"> </span></span>
+<span id="cb6-8"><a href="#cb6-8"></a><span class="co">    - name: Jorge Luiz Franco </span></span>
+<span id="cb6-9"><a href="#cb6-9"></a><span class="co">      url: https://www.linkedin.com/in/jorgelwyz/</span></span>
+<span id="cb6-10"><a href="#cb6-10"></a><span class="an">categories:</span></span>
+<span id="cb6-11"><a href="#cb6-11"></a><span class="co">  - counterfactuals</span></span>
+<span id="cb6-12"><a href="#cb6-12"></a><span class="co">  - explainable AI</span></span>
+<span id="cb6-13"><a href="#cb6-13"></a><span class="co">  - causality</span></span>
+<span id="cb6-14"><a href="#cb6-14"></a><span class="co">  - Julia</span></span>
+<span id="cb6-15"><a href="#cb6-15"></a><span class="an">image:</span><span class="co"> www/intro.png</span></span>
+<span id="cb6-16"><a href="#cb6-16"></a><span class="an">execute:</span></span>
+<span id="cb6-17"><a href="#cb6-17"></a><span class="co">  eval: true</span></span>
+<span id="cb6-18"><a href="#cb6-18"></a><span class="co">  echo: true</span></span>
+<span id="cb6-19"><a href="#cb6-19"></a><span class="an">engine:</span><span class="co"> julia</span></span>
+<span id="cb6-20"><a href="#cb6-20"></a><span class="an">julia:</span><span class="co"> </span></span>
+<span id="cb6-21"><a href="#cb6-21"></a><span class="co">  exeflags: ["--project=./"]</span></span>
+<span id="cb6-22"><a href="#cb6-22"></a><span class="an">code-fold:</span><span class="co"> show</span></span>
+<span id="cb6-23"><a href="#cb6-23"></a><span class="co">---</span></span>
+<span id="cb6-24"><a href="#cb6-24"></a></span>
+<span id="cb6-25"><a href="#cb6-25"></a><span class="fu"># Introduction</span></span>
+<span id="cb6-26"><a href="#cb6-26"></a></span>
+<span id="cb6-27"><a href="#cb6-27"></a>In recent years, the need for interpretable and explainable AI has surged, particularly in high-stakes domains. Counterfactual explanations provide a means to understand how changes to input features could alter the outcomes of machine learning models. This blog post presents a new tool in the CounterfactualExplanations.jl package, developed during my JSoC (Julia Summer of Code) project, which incorporates causal reasoning into counterfactual generation.</span>
+<span id="cb6-28"><a href="#cb6-28"></a></span>
+<span id="cb6-29"><a href="#cb6-29"></a><span class="fu"># Project Overview</span></span>
+<span id="cb6-30"><a href="#cb6-30"></a></span>
+<span id="cb6-31"><a href="#cb6-31"></a>This project aimed to enhance the CounterfactualExplanations.jl package by infusing it with a robust mathematical foundation for minimal algorithmic recourse, based on the principles of causal reasoning <span class="co">[</span><span class="ot">@karimi2021algorithmic</span><span class="co">]</span>. </span>
+<span id="cb6-32"><a href="#cb6-32"></a></span>
+<span id="cb6-33"><a href="#cb6-33"></a><span class="fu">## Key Contributions</span></span>
+<span id="cb6-34"><a href="#cb6-34"></a></span>
+<span id="cb6-35"><a href="#cb6-35"></a>During the project, I contributed to two key repositories:</span>
+<span id="cb6-36"><a href="#cb6-36"></a></span>
+<span id="cb6-37"><a href="#cb6-37"></a><span class="ss">1. </span>**CounterfactualExplanations.jl**: Developed a new tool for generating counterfactual explanations using causal information. This allows users to create smarter perturbations rather than random adjustments, ultimately providing more meaningful insights.</span>
+<span id="cb6-38"><a href="#cb6-38"></a></span>
+<span id="cb6-39"><a href="#cb6-39"></a><span class="ss">2. </span>**CausalInference.jl**: Implemented a Structural Causal Model (SCM) structure that extracts information from data, laying the groundwork for the causal reasoning capabilities in CounterfactualExplanations.jl.</span>
+<span id="cb6-40"><a href="#cb6-40"></a></span>
+<span id="cb6-41"><a href="#cb6-41"></a>This was an amazing experience, not just experience contribute to two repositories simultaneously, but also to work with the mantainers of these repos. I learned a lot about the Julia language and the Julia community. This was possible because of the mentorship of Patrick Altmeyer (CounterfactualExplanations) and Moritz Schauer (CausalInference), who guided me throughout the project and are amazing researchers.</span>
+<span id="cb6-42"><a href="#cb6-42"></a></span>
+<span id="cb6-43"><a href="#cb6-43"></a><span class="fu">## The `MINTGenerator`</span></span>
+<span id="cb6-44"><a href="#cb6-44"></a></span>
+<span id="cb6-45"><a href="#cb6-45"></a>In this project, we developed the MINTGenerator, a counterfactual generator based on the Recourse through Minimal</span>
+<span id="cb6-46"><a href="#cb6-46"></a>Intervention (MINT) method proposed by @karimi2021algorithmic.</span>
+<span id="cb6-47"><a href="#cb6-47"></a></span>
+<span id="cb6-48"><a href="#cb6-48"></a><span class="fu">## Description</span></span>
+<span id="cb6-49"><a href="#cb6-49"></a></span>
+<span id="cb6-50"><a href="#cb6-50"></a>The MINTGenerator incorporates causal reeasoning in algorithm recourse to achieve minimal interventions when generating a counterfactual explanation. In this sense, the main ideia is that just perturbating a black box model without taking into account the causal relations in the data can guide to misleading recommendations. Here we now shift to a perspective where every action/pertubation is an intervetion in the causal graph of the problem, thus the change is not made just in the intervened upon variable, but also in its childs in the causal structure. The generator utilizes a Structural Causal Model(SCM) to encode the variables in a way that causal effects are propagated and uses a generic gradient-based generator to create the search path, that is, any gradient-base generator (ECCo, REVISE, Watcher, ...) can be used with the MINT SCM encoder to generate counterfactual samples in latent space for minimal intervetions algorithm recourse.</span>
+<span id="cb6-51"><a href="#cb6-51"></a></span>
+<span id="cb6-52"><a href="#cb6-52"></a>The MINT algorithm minimizes a loss function that combines the causal constraints of the SCM and the distance between the generated counterfactual and the original input. Since we want a gradient-based generator, we need to pass the constrained optimizaiton problem into an unconstrained one and we do this by using the Lagrangian. Initially, as defined in <span class="co">[</span><span class="ot">@karimi2021algorithmic</span><span class="co">]</span>, we aim to aim to find the minimal cost set of actions $A$ (in the form of structural interventions) that results in a counterfactual instance yielding the favorable output from $h$,</span>
+<span id="cb6-53"><a href="#cb6-53"></a></span>
+<span id="cb6-54"><a href="#cb6-54"></a>$$</span>
+<span id="cb6-55"><a href="#cb6-55"></a>\begin{aligned}</span>
+<span id="cb6-56"><a href="#cb6-56"></a>A^* \in \arg\min_A \text{cost}(A; \mathbf{x}_F)<span class="sc">\\</span></span>
+<span id="cb6-57"><a href="#cb6-57"></a>\textrm{s.t.} \quad  h(\mathbf{x}_{SCF}) \neq h(\mathbf{x}_F) \; \; \text{,}<span class="sc">\\</span></span>
+<span id="cb6-58"><a href="#cb6-58"></a>\end{aligned} </span>
+<span id="cb6-59"><a href="#cb6-59"></a>$$</span>
+<span id="cb6-60"><a href="#cb6-60"></a></span>
+<span id="cb6-61"><a href="#cb6-61"></a>where $\mathbf{x}_F$ is the original input, $\mathbf{x}_{SCF}$ is the counterfactual instance, and $h$ is the black-box model. We use the $\mathbf{x}_{SCF}$ terminology because the counterfactual is derived from the SCM,</span>
+<span id="cb6-62"><a href="#cb6-62"></a></span>
+<span id="cb6-63"><a href="#cb6-63"></a>$$</span>
+<span id="cb6-64"><a href="#cb6-64"></a>x_{SCF_i} = </span>
+<span id="cb6-65"><a href="#cb6-65"></a>\begin{cases}</span>
+<span id="cb6-66"><a href="#cb6-66"></a>x_{F_i} + \delta_i, &amp; \text{if } i \in I <span class="sc">\\</span></span>
+<span id="cb6-67"><a href="#cb6-67"></a>x_{F_i} + f_i(\text{pa}_{SCF_i}) - f_i(\text{pa}_{F_i}), &amp; \text{if } i \notin I  \; \; \text{,}</span>
+<span id="cb6-68"><a href="#cb6-68"></a>\end{cases} </span>
+<span id="cb6-69"><a href="#cb6-69"></a>$$</span>
+<span id="cb6-70"><a href="#cb6-70"></a></span>
+<span id="cb6-71"><a href="#cb6-71"></a>where $I$ is the set of intervened upon variables, $f_i$ is the function that generates the value of the variable $i$ given its parents, and $\text{pa}_{SCF_i}$ and $\text{pa}_{F_i}$ are the parents of the variable $i$ in the counterfactual and original instance, respectively. This closed formula for the decision variable $\mathbf{x}_{SCF}$ is what makes possible to use a gradient-based generator, since with it the lagrangian is differentiable,</span>
+<span id="cb6-72"><a href="#cb6-72"></a></span>
+<span id="cb6-73"><a href="#cb6-73"></a>$$</span>
+<span id="cb6-74"><a href="#cb6-74"></a>\mathcal{L}(A ; \lambda) = \text{cost}(A; \mathbf{x}_F) + \lambda \left(h(\mathbf{x}_{SCF}) - h(\mathbf{x}_F) \right) \; \; \text{,}</span>
+<span id="cb6-75"><a href="#cb6-75"></a>$$</span>
+<span id="cb6-76"><a href="#cb6-76"></a></span>
+<span id="cb6-77"><a href="#cb6-77"></a>or in simple terms and more standard, since $\lambda$ is constant,</span>
+<span id="cb6-78"><a href="#cb6-78"></a></span>
+<span id="cb6-79"><a href="#cb6-79"></a>$$</span>
+<span id="cb6-80"><a href="#cb6-80"></a>\mathcal{L_{\texttt{MINT}}}(\mathbf{x}_{SCF}) = \lambda \text{cost}(\mathbf{x}_{SCF}; \mathbf{x}_F) + \text{yloss}(\mathbf{x}_{SCF},y^*) \; \; \text{,}</span>
+<span id="cb6-81"><a href="#cb6-81"></a>$$</span>
+<span id="cb6-82"><a href="#cb6-82"></a></span>
+<span id="cb6-83"><a href="#cb6-83"></a>where $y^*$ is clearly $h(x_F)$ and $\text{yloss}$ is : </span>
+<span id="cb6-84"><a href="#cb6-84"></a></span>
+<span id="cb6-85"><a href="#cb6-85"></a>$$</span>
+<span id="cb6-86"><a href="#cb6-86"></a>\text{yloss}(\mathbf{x}_{SCF}, y^*) = h \left(\left\{ x_{F_i} + \delta_i [i \in I] + \left(f_i(\text{pa}_{SCF_i}) - f_i(\text{pa}_{F_i}) \right) [i \notin I] \right\}_{i=1}^n \right) - y^* \; \; \text{.} </span>
+<span id="cb6-87"><a href="#cb6-87"></a>$$</span>
+<span id="cb6-88"><a href="#cb6-88"></a></span>
+<span id="cb6-89"><a href="#cb6-89"></a><span class="fu">## Implementation</span></span>
+<span id="cb6-90"><a href="#cb6-90"></a></span>
+<span id="cb6-91"><a href="#cb6-91"></a><span class="fu">### `CausalInference.jl`</span></span>
+<span id="cb6-92"><a href="#cb6-92"></a></span>
+<span id="cb6-93"><a href="#cb6-93"></a>In terms of implementation, we need to capture the causal relations from the data, that's where <span class="in">`CausalInference.jl`</span> comes in. However, before the project, the package did not have a SCM structure, in the sense that the methods just captured the topological Directed Acyclic Graph (DAG) that showed the causality ruling the data, that is, no causal structural equations were provided,</span>
+<span id="cb6-94"><a href="#cb6-94"></a></span>
+<span id="cb6-97"><a href="#cb6-97"></a><span class="in">```{julia}</span></span>
+<span id="cb6-98"><a href="#cb6-98"></a><span class="in">#| output: true</span></span>
+<span id="cb6-99"><a href="#cb6-99"></a></span>
+<span id="cb6-100"><a href="#cb6-100"></a><span class="in">using CausalInference</span></span>
+<span id="cb6-101"><a href="#cb6-101"></a><span class="in">using CounterfactualExplanations</span></span>
+<span id="cb6-102"><a href="#cb6-102"></a><span class="in">using CounterfactualExplanations.GenerativeModels</span></span>
+<span id="cb6-103"><a href="#cb6-103"></a><span class="in">using Graphs</span></span>
+<span id="cb6-104"><a href="#cb6-104"></a><span class="in">using GraphRecipes</span></span>
+<span id="cb6-105"><a href="#cb6-105"></a><span class="in">using MultivariateStats</span></span>
+<span id="cb6-106"><a href="#cb6-106"></a><span class="in">using Plots</span></span>
+<span id="cb6-107"><a href="#cb6-107"></a><span class="in">using Random</span></span>
+<span id="cb6-108"><a href="#cb6-108"></a><span class="in">Random.seed!(1)</span></span>
+<span id="cb6-109"><a href="#cb6-109"></a><span class="in">using StatsBase</span></span>
+<span id="cb6-110"><a href="#cb6-110"></a></span>
+<span id="cb6-111"><a href="#cb6-111"></a><span class="in">N = 2000 # number of data points</span></span>
+<span id="cb6-112"><a href="#cb6-112"></a></span>
+<span id="cb6-113"><a href="#cb6-113"></a><span class="in">x = randn(N)</span></span>
+<span id="cb6-114"><a href="#cb6-114"></a><span class="in">v = x + randn(N)*0.25</span></span>
+<span id="cb6-115"><a href="#cb6-115"></a><span class="in">w = x + randn(N)*0.25</span></span>
+<span id="cb6-116"><a href="#cb6-116"></a><span class="in">z = v + w + randn(N)*0.25</span></span>
+<span id="cb6-117"><a href="#cb6-117"></a><span class="in">s = z + randn(N)*0.25</span></span>
+<span id="cb6-118"><a href="#cb6-118"></a></span>
+<span id="cb6-119"><a href="#cb6-119"></a><span class="in">df = (x=x, v=v, w=w, z=z, s=s)</span></span>
+<span id="cb6-120"><a href="#cb6-120"></a></span>
+<span id="cb6-121"><a href="#cb6-121"></a><span class="in">est_g, score = ges(df; penalty=1.0, parallel=true)</span></span>
+<span id="cb6-122"><a href="#cb6-122"></a></span>
+<span id="cb6-123"><a href="#cb6-123"></a><span class="in">plt = graphplot(pdag2dag!(est_g), names= [String(k) for k in keys(df)], size=(500,500), nodesize=0.1, fontsize=25)</span></span>
+<span id="cb6-124"><a href="#cb6-124"></a><span class="in">savefig(plt, "www/intro.png")</span></span>
+<span id="cb6-125"><a href="#cb6-125"></a><span class="in">display(plt)</span></span>
+<span id="cb6-126"><a href="#cb6-126"></a><span class="in">```</span></span>
+<span id="cb6-127"><a href="#cb6-127"></a></span>
+<span id="cb6-128"><a href="#cb6-128"></a>So, our goal was given the DAG provided by the <span class="in">`ges`</span> method in the causal discovery <span class="co">[</span><span class="ot">@chickering2003optimal</span><span class="co">]</span>, generate equations that rules each of these causal relations, represented in the DAG as directed edges. The SCM is the union of the DAG and these causal equations, that is, the SCM is a tuple $(G, \mathbf{f})$, where $G$ is the DAG and $\mathbf{f}$ is the set of functions that generates the value of each variable given its parents. </span>
+<span id="cb6-129"><a href="#cb6-129"></a></span>
+<span id="cb6-130"><a href="#cb6-130"></a>Our solution for constructing the structural causal equations was to assume that the data was generated by a linear model, ie, the causal relations were linear. For the DAG provided in the code example we derive</span>
+<span id="cb6-131"><a href="#cb6-131"></a></span>
+<span id="cb6-132"><a href="#cb6-132"></a>$$ v = \mathcal{b}_v $$</span>
+<span id="cb6-133"><a href="#cb6-133"></a></span>
+<span id="cb6-134"><a href="#cb6-134"></a>$$ x = \mathcal{a}_{v \to x} v + \mathcal{b}_x $$</span>
+<span id="cb6-135"><a href="#cb6-135"></a></span>
+<span id="cb6-136"><a href="#cb6-136"></a>$$ w = \mathcal{a}_{x \to w} x + \mathcal{b}_w $$</span>
+<span id="cb6-137"><a href="#cb6-137"></a></span>
+<span id="cb6-138"><a href="#cb6-138"></a>$$ z = \mathcal{a}_{v \to z} v+ \mathcal{a}_{w \to z} w + \mathcal{b}_z $$</span>
+<span id="cb6-139"><a href="#cb6-139"></a></span>
+<span id="cb6-140"><a href="#cb6-140"></a>$$ s = \mathcal{a}_{z \to s} z + \mathcal{b}_s $$</span>
+<span id="cb6-141"><a href="#cb6-141"></a></span>
+<span id="cb6-142"><a href="#cb6-142"></a>and that's the tricky thing, as we can see these causal equations are different than the ones that generated the data, but they are the ones that respect the causal system obtained from the obtained DAG. Here $\mathcal{b}_i$ and $\mathcal{a}_{i \to j}$ are the intercept term and the coefficient obtained from the linear regression, respectively. To correctly solve the linear regression respecting the dependencies of the causal graph, we use <span class="in">`topological_sort_by_dfs`</span> from <span class="in">`Graphs.jl`</span>.</span>
+<span id="cb6-143"><a href="#cb6-143"></a></span>
+<span id="cb6-144"><a href="#cb6-144"></a>Now, with the SCM structure in hand, we see that the representation could be a struct containing the DAG and the coefficients/intercepts of the causal equations, this maps exactly the tuple $(G, \mathbf{f})$ that we defined. However, since we need these equations to be differentiable, we need to define a function that takes the SCM and returns the value of the variable given its parents and using just the coefficients and the DAG, lead to errors, because <span class="in">`AutoDiff`</span> does not deal well with functions that are conditioned (<span class="in">`if`</span> statements). So, we need to define a way to retrieve the system of causal equations in a smooth way and that's where the <span class="in">`causal_effects`</span> matrix comes to the rescue.</span>
+<span id="cb6-145"><a href="#cb6-145"></a></span>
+<span id="cb6-146"><a href="#cb6-146"></a>Let the factual vector of features be denoted as:</span>
+<span id="cb6-147"><a href="#cb6-147"></a></span>
+<span id="cb6-148"><a href="#cb6-148"></a>$$</span>
+<span id="cb6-149"><a href="#cb6-149"></a>\mathbf{x}_F = </span>
+<span id="cb6-150"><a href="#cb6-150"></a>\begin{bmatrix}</span>
+<span id="cb6-151"><a href="#cb6-151"></a>x_{F_1} <span class="sc">\\</span></span>
+<span id="cb6-152"><a href="#cb6-152"></a>x_{F_2} <span class="sc">\\</span></span>
+<span id="cb6-153"><a href="#cb6-153"></a>x_{F_3} <span class="sc">\\</span></span>
+<span id="cb6-154"><a href="#cb6-154"></a>\vdots <span class="sc">\\</span></span>
+<span id="cb6-155"><a href="#cb6-155"></a>x_{F_n}</span>
+<span id="cb6-156"><a href="#cb6-156"></a>\end{bmatrix}</span>
+<span id="cb6-157"><a href="#cb6-157"></a>$$</span>
+<span id="cb6-158"><a href="#cb6-158"></a></span>
+<span id="cb6-159"><a href="#cb6-159"></a>Let the <span class="in">`causal_effects`</span> matrix be:</span>
+<span id="cb6-160"><a href="#cb6-160"></a></span>
+<span id="cb6-161"><a href="#cb6-161"></a>$$</span>
+<span id="cb6-162"><a href="#cb6-162"></a>\mathbf{C} =</span>
+<span id="cb6-163"><a href="#cb6-163"></a>\begin{bmatrix}</span>
+<span id="cb6-164"><a href="#cb6-164"></a>a_{11} &amp; a_{12} &amp; \cdots &amp; a_{1n} &amp; b_1 <span class="sc">\\</span></span>
+<span id="cb6-165"><a href="#cb6-165"></a>a_{21} &amp; a_{22} &amp; \cdots &amp; a_{2n} &amp; b_2 <span class="sc">\\</span></span>
+<span id="cb6-166"><a href="#cb6-166"></a>a_{31} &amp; a_{32} &amp; \cdots &amp; a_{3n} &amp; b_3 <span class="sc">\\</span></span>
+<span id="cb6-167"><a href="#cb6-167"></a>\vdots &amp; \vdots &amp; \ddots &amp; \vdots &amp; \vdots <span class="sc">\\</span></span>
+<span id="cb6-168"><a href="#cb6-168"></a>a_{n1} &amp; a_{n2} &amp; \cdots &amp; a_{nn} &amp; b_n <span class="sc">\\</span></span>
+<span id="cb6-169"><a href="#cb6-169"></a>\end{bmatrix}</span>
+<span id="cb6-170"><a href="#cb6-170"></a>$$</span>
+<span id="cb6-171"><a href="#cb6-171"></a></span>
+<span id="cb6-172"><a href="#cb6-172"></a>Here, $a_{ij}$ represents the coefficient from the causal effect of $x_{F_j}$ on $x_{F_i}$, and $b_i$ represents the intercept term for the variable $x_{F_i}$.</span>
+<span id="cb6-173"><a href="#cb6-173"></a></span>
+<span id="cb6-174"><a href="#cb6-174"></a>The matrix multiplication of the <span class="in">`causal_effects`</span> matrix with the factual vector (excluding the bias term) is given by:</span>
+<span id="cb6-175"><a href="#cb6-175"></a></span>
+<span id="cb6-176"><a href="#cb6-176"></a>$$</span>
+<span id="cb6-177"><a href="#cb6-177"></a>\mathbf{C}_{:, 1:n} \cdot \mathbf{x}_F =</span>
+<span id="cb6-178"><a href="#cb6-178"></a>\begin{bmatrix}</span>
+<span id="cb6-179"><a href="#cb6-179"></a>a_{11} &amp; a_{12} &amp; \cdots &amp; a_{1n} <span class="sc">\\</span></span>
+<span id="cb6-180"><a href="#cb6-180"></a>a_{21} &amp; a_{22} &amp; \cdots &amp; a_{2n} <span class="sc">\\</span></span>
+<span id="cb6-181"><a href="#cb6-181"></a>a_{31} &amp; a_{32} &amp; \cdots &amp; a_{3n} <span class="sc">\\</span></span>
+<span id="cb6-182"><a href="#cb6-182"></a>\vdots &amp; \vdots &amp; \ddots &amp; \vdots <span class="sc">\\</span></span>
+<span id="cb6-183"><a href="#cb6-183"></a>a_{n1} &amp; a_{n2} &amp; \cdots &amp; a_{nn}</span>
+<span id="cb6-184"><a href="#cb6-184"></a>\end{bmatrix}</span>
+<span id="cb6-185"><a href="#cb6-185"></a>\begin{bmatrix}</span>
+<span id="cb6-186"><a href="#cb6-186"></a>x_{F_1} <span class="sc">\\</span></span>
+<span id="cb6-187"><a href="#cb6-187"></a>x_{F_2} <span class="sc">\\</span></span>
+<span id="cb6-188"><a href="#cb6-188"></a>x_{F_3} <span class="sc">\\</span></span>
+<span id="cb6-189"><a href="#cb6-189"></a>\vdots <span class="sc">\\</span></span>
+<span id="cb6-190"><a href="#cb6-190"></a>x_{F_n}</span>
+<span id="cb6-191"><a href="#cb6-191"></a>\end{bmatrix}</span>
+<span id="cb6-192"><a href="#cb6-192"></a>$$</span>
+<span id="cb6-193"><a href="#cb6-193"></a></span>
+<span id="cb6-194"><a href="#cb6-194"></a>Finally, we add the bias term:</span>
+<span id="cb6-195"><a href="#cb6-195"></a></span>
+<span id="cb6-196"><a href="#cb6-196"></a>$$</span>
+<span id="cb6-197"><a href="#cb6-197"></a>\mathbf{x}_{SCF} = \mathbf{C}_{:, 1:n} \cdot \mathbf{x}_F + </span>
+<span id="cb6-198"><a href="#cb6-198"></a>\begin{bmatrix}</span>
+<span id="cb6-199"><a href="#cb6-199"></a>b_1 <span class="sc">\\</span></span>
+<span id="cb6-200"><a href="#cb6-200"></a>b_2 <span class="sc">\\</span></span>
+<span id="cb6-201"><a href="#cb6-201"></a>b_3 <span class="sc">\\</span></span>
+<span id="cb6-202"><a href="#cb6-202"></a>\vdots <span class="sc">\\</span></span>
+<span id="cb6-203"><a href="#cb6-203"></a>b_n</span>
+<span id="cb6-204"><a href="#cb6-204"></a>\end{bmatrix}</span>
+<span id="cb6-205"><a href="#cb6-205"></a>$$</span>
+<span id="cb6-206"><a href="#cb6-206"></a></span>
+<span id="cb6-207"><a href="#cb6-207"></a>In expanded form:</span>
+<span id="cb6-208"><a href="#cb6-208"></a></span>
+<span id="cb6-209"><a href="#cb6-209"></a>$$</span>
+<span id="cb6-210"><a href="#cb6-210"></a>\mathbf{x}_{SCF_i} = a_{i1} x_{F_1} + a_{i2} x_{F_2} + \cdots + a_{in} x_{F_n} + b_i, \quad \forall i = 1, 2, \dots, n</span>
+<span id="cb6-211"><a href="#cb6-211"></a>$$</span>
+<span id="cb6-212"><a href="#cb6-212"></a></span>
+<span id="cb6-213"><a href="#cb6-213"></a>This equation shows how each counterfactual variable $x_{SCF_i}$ is generated as a linear combination of the factual inputs $x_{F_j}$ based on the causal effects matrix, with an intercept term $b_i$ added for each variable.</span>
+<span id="cb6-214"><a href="#cb6-214"></a></span>
+<span id="cb6-215"><a href="#cb6-215"></a>One can note that the <span class="in">`orphan`</span> nodes, that is, the nodes that do not have parents in the DAG, are going to be equal to the intercept term $\mathcal{b}_\hat{o}$. The intuition behind this is that when we do the linear regression, variables that have no causal parents are just equal to the unconditional mean of the variable, i.e, we get $x_{SCF_\hat{o}} = \mathbb{E}(x_\hat{o})$. Because of this, in some cases a better understanding of the regression is needed, so the residuals are also part of the SCM structure,</span>
+<span id="cb6-216"><a href="#cb6-216"></a></span>
+<span id="cb6-219"><a href="#cb6-219"></a><span class="in">```{julia}</span></span>
+<span id="cb6-220"><a href="#cb6-220"></a><span class="in">#| eval: false</span></span>
+<span id="cb6-221"><a href="#cb6-221"></a></span>
+<span id="cb6-222"><a href="#cb6-222"></a><span class="in">struct SCM</span></span>
+<span id="cb6-223"><a href="#cb6-223"></a><span class="in">    variables::Vector{String}</span></span>
+<span id="cb6-224"><a href="#cb6-224"></a><span class="in">    coefficients::Vector{Vector{Float64}}</span></span>
+<span id="cb6-225"><a href="#cb6-225"></a><span class="in">    residuals::Vector{Vector{Float64}}</span></span>
+<span id="cb6-226"><a href="#cb6-226"></a><span class="in">    dag::DiGraph</span></span>
+<span id="cb6-227"><a href="#cb6-227"></a><span class="in">    causal_effects::Matrix{Float64}</span></span>
+<span id="cb6-228"><a href="#cb6-228"></a><span class="in">end</span></span>
+<span id="cb6-229"><a href="#cb6-229"></a><span class="in">```</span></span>
+<span id="cb6-230"><a href="#cb6-230"></a></span>
+<span id="cb6-231"><a href="#cb6-231"></a><span class="fu">### `CounterfactualExplanations.jl` </span></span>
+<span id="cb6-232"><a href="#cb6-232"></a></span>
+<span id="cb6-233"><a href="#cb6-233"></a>Now, we need to go into the optimization problem previously described. We seek to minimize the lagrangian function we defined where now we have a differentiable function. The standard way to implement generators in <span class="in">`CounterfactualExplanations.jl`</span> is to use <span class="in">`AutoDiff`</span> exactly using composable functions in the lagrangian. The definition of $\mathcal{L_{\texttt{MINT}}}$ is in the same shape of the the others gradient-based generators in the package, so the optimization is straightforward. However, we needed some way to pass the $x_F$ into the $x_{SCF}$ and that's where <span class="in">`transformer.jl`</span> comes in. This is where <span class="in">`InputTransformer`</span>s are defined in the package and in some way this is what we are doing, we are passing our factual to the "latent" causal space of the counterfactual. Our first step is to create a new kind of <span class="in">`InputTransformer`</span> that is the SCM itself,</span>
+<span id="cb6-234"><a href="#cb6-234"></a></span>
+<span id="cb6-237"><a href="#cb6-237"></a><span class="in">```{julia}</span></span>
+<span id="cb6-238"><a href="#cb6-238"></a><span class="in">const TypedInputTransformer = Union{</span></span>
+<span id="cb6-239"><a href="#cb6-239"></a><span class="in">    Type{&lt;:StatsBase.AbstractDataTransform},</span></span>
+<span id="cb6-240"><a href="#cb6-240"></a><span class="in">    Type{&lt;:MultivariateStats.AbstractDimensionalityReduction},</span></span>
+<span id="cb6-241"><a href="#cb6-241"></a><span class="in">    Type{&lt;:GenerativeModels.AbstractGenerativeModel},</span></span>
+<span id="cb6-242"><a href="#cb6-242"></a><span class="in">    Type{&lt;:CausalInference.SCM} # The SCM transfromer</span></span>
+<span id="cb6-243"><a href="#cb6-243"></a><span class="in">}</span></span>
+<span id="cb6-244"><a href="#cb6-244"></a><span class="in">```</span></span>
+<span id="cb6-245"><a href="#cb6-245"></a></span>
+<span id="cb6-246"><a href="#cb6-246"></a>and then we need a way to create this transformer, that's where we "overload" <span class="in">`fit_transformer`</span> using <span class="in">`CausalInferece.jl`</span>, </span>
+<span id="cb6-247"><a href="#cb6-247"></a></span>
+<span id="cb6-250"><a href="#cb6-250"></a><span class="in">```{julia}</span></span>
+<span id="cb6-251"><a href="#cb6-251"></a><span class="in">function fit_transformer(</span></span>
+<span id="cb6-252"><a href="#cb6-252"></a><span class="in">    data::CounterfactualData, input_encoder::Type{&lt;:CausalInference.SCM}; kwargs...</span></span>
+<span id="cb6-253"><a href="#cb6-253"></a><span class="in">)</span></span>
+<span id="cb6-254"><a href="#cb6-254"></a><span class="in">    t = Tables.table(transpose(data.X))</span></span>
+<span id="cb6-255"><a href="#cb6-255"></a><span class="in">    est_g, score = CausalInference.ges(t; penalty=1.0, parallel=true)</span></span>
+<span id="cb6-256"><a href="#cb6-256"></a><span class="in">    est_dag = CausalInference.pdag2dag!(est_g)</span></span>
+<span id="cb6-257"><a href="#cb6-257"></a><span class="in">    scm = CausalInference.estimate_equations(t, est_dag)</span></span>
+<span id="cb6-258"><a href="#cb6-258"></a><span class="in">    return scm</span></span>
+<span id="cb6-259"><a href="#cb6-259"></a><span class="in">end</span></span>
+<span id="cb6-260"><a href="#cb6-260"></a><span class="in">```</span>  </span>
+<span id="cb6-261"><a href="#cb6-261"></a>... We are getting there! However, now comes the hardest part, where this is placed?</span>
+<span id="cb6-262"><a href="#cb6-262"></a></span>
+<span id="cb6-263"><a href="#cb6-263"></a></span>
+<span id="cb6-264"><a href="#cb6-264"></a></span>
+<span id="cb6-265"><a href="#cb6-265"></a></span>
+<span id="cb6-266"><a href="#cb6-266"></a></span>
+<span id="cb6-267"><a href="#cb6-267"></a><span class="fu"># Conclusion</span></span>
+<span id="cb6-268"><a href="#cb6-268"></a></span>
+<span id="cb6-269"><a href="#cb6-269"></a><span class="co">&lt;!-- In conclusion, this project has successfully integrated causal reasoning into the CounterfactualExplanations.jl package, providing a valuable tool for generating counterfactual explanations that are not only interpretable but also actionable. --&gt;</span></span>
+<span id="cb6-270"><a href="#cb6-270"></a></span>
+<span id="cb6-271"><a href="#cb6-271"></a><span class="fu"># References</span></span>
 </code><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></pre></div>
 </div></div></div></div></div>
 </div> <!-- /content -->
