@@ -220,6 +220,35 @@ end
 
 ### `CounterfactualExplanations.jl` 
 
+Now, we need to go into the optimization problem previously described. We seek to minimize the lagrangian function we defined where now we have a differentiable function. The standard way to implement generators in `CounterfactualExplanations.jl` is to use `AutoDiff` exactly using composable functions in the lagrangian. The definition of $\mathcal{L_{\texttt{MINT}}}$ is in the same shape of the the others gradient-based generators in the package, so the optimization is straightforward. However, we needed some way to pass the $x_F$ into the $x_{SCF}$ and that's where `transformer.jl` comes in. This is where `InputTransformer`s are defined in the package and in some way this is what we are doing, we are passing our factual to the "latent" causal space of the counterfactual. Our first step is to create a new kind of `InputTransformer` that is the SCM itself,
+
+```{julia}
+const TypedInputTransformer = Union{
+    Type{<:StatsBase.AbstractDataTransform},
+    Type{<:MultivariateStats.AbstractDimensionalityReduction},
+    Type{<:GenerativeModels.AbstractGenerativeModel},
+    Type{<:CausalInference.SCM} # The SCM transfromer
+}
+```
+
+and then we need a way to create this transformer, that's where we "overload" `fit_transformer` using `CausalInferece.jl`, 
+
+```{julia}
+function fit_transformer(
+    data::CounterfactualData, input_encoder::Type{<:CausalInference.SCM}; kwargs...
+)
+    t = Tables.table(transpose(data.X))
+    est_g, score = CausalInference.ges(t; penalty=1.0, parallel=true)
+    est_dag = CausalInference.pdag2dag!(est_g)
+    scm = CausalInference.estimate_equations(t, est_dag)
+    return scm
+end
+```  
+... We are getting there! However, now comes the hardest part, where this is placed?
+
+
+
+
 
 # Conclusion
 

@@ -230,7 +230,7 @@ x_{F_i} + f_i(\text{pa}_{SCF_i}) - f_i(\text{pa}_{F_i}), &amp; \text{if } i \not
 <section id="causalinference.jl" class="level3">
 <h3 class="anchored" data-anchor-id="causalinference.jl"><code>CausalInference.jl</code></h3>
 <p>In terms of implementation, we need to capture the causal relations from the data, that’s where <code>CausalInference.jl</code> comes in. However, before the project, the package did not have a SCM structure, in the sense that the methods just captured the topological Directed Acyclic Graph (DAG) that showed the causality ruling the data, that is, no causal structural equations were provided,</p>
-<div id="48d194d1" class="cell" data-execution_count="1">
+<div id="20487bdf" class="cell" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">CausalInference</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">Plots</span>, <span class="bu">GraphRecipes</span></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">Random</span></span>
@@ -317,7 +317,7 @@ b_n
 \]</span></p>
 <p>This equation shows how each counterfactual variable <span class="math inline">\(x_{SCF_i}\)</span> is generated as a linear combination of the factual inputs <span class="math inline">\(x_{F_j}\)</span> based on the causal effects matrix, with an intercept term <span class="math inline">\(b_i\)</span> added for each variable.</p>
 <p>One can note that the <code>orphan</code> nodes, that is, the nodes that do not have parents in the DAG, are going to be equal to the intercept term <span class="math inline">\(\mathcal{b}_\hat{o}\)</span>. The intuition behind this is that when we do the linear regression, variables that have no causal parents are just equal to the unconditional mean of the variable, i.e, we get <span class="math inline">\(x_{SCF_\hat{o}} = \mathbb{E}(x_\hat{o})\)</span>. Because of this, in some cases a better understanding of the regression is needed, so the residuals are also part of the SCM structure,</p>
-<div id="cda2fdc4" class="cell" data-execution_count="2">
+<div id="e3f26e95" class="cell" data-execution_count="2">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> SCM</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    variables<span class="op">::</span><span class="dt">Vector{String}</span></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    coefficients<span class="op">::</span><span class="dt">Vector{Vector{Float64}}</span></span>
@@ -329,6 +329,28 @@ b_n
 </section>
 <section id="counterfactualexplanations.jl" class="level3">
 <h3 class="anchored" data-anchor-id="counterfactualexplanations.jl"><code>CounterfactualExplanations.jl</code></h3>
+<p>Now, we need to go into the optimization problem previously described. We seek to minimize the lagrangian function we defined where now we have a differentiable function. The standard way to implement generators in <code>CounterfactualExplanations.jl</code> is to use <code>AutoDiff</code> exactly using composable functions in the lagrangian. The definition of <span class="math inline">\(\mathcal{L_{\texttt{MINT}}}\)</span> is in the same shape of the the others gradient-based generators in the package, so the optimization is straightforward. However, we needed some way to pass the <span class="math inline">\(x_F\)</span> into the <span class="math inline">\(x_{SCF}\)</span> and that’s where <code>transformer.jl</code> comes in. This is where <code>InputTransformer</code>s are defined in the package and in some way this is what we are doing, we are passing our factual to the “latent” causal space of the counterfactual. Our first step is to create a new kind of <code>InputTransformer</code> that is the SCM itself,</p>
+<div id="24ab8c56" class="cell" data-execution_count="3">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> TypedInputTransformer <span class="op">=</span> <span class="dt">Union</span>{</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">Type</span>{<span class="op">&lt;:</span><span class="dt">StatsBase.AbstractDataTransform</span>},</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">Type</span>{<span class="op">&lt;:</span><span class="dt">MultivariateStats.AbstractDimensionalityReduction</span>},</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">Type</span>{<span class="op">&lt;:</span><span class="dt">GenerativeModels.AbstractGenerativeModel</span>},</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">Type</span>{<span class="op">&lt;:</span><span class="dt">CausalInference.SCM</span>} <span class="co"># The SCM transfromer</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>and then we need a way to create this transformer, that’s where we “overload” <code>fit_transformer</code> using <code>CausalInferece.jl</code>,</p>
+<div id="458e5161" class="cell" data-execution_count="4">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">fit_transformer</span>(</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    data<span class="op">::</span><span class="dt">CounterfactualData</span>, input_encoder<span class="op">::</span><span class="dt">Type{&lt;:CausalInference.SCM}</span>; kwargs<span class="op">...</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    t <span class="op">=</span> Tables.<span class="fu">table</span>(<span class="fu">transpose</span>(data.X))</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    est_g, score <span class="op">=</span> CausalInference.<span class="fu">ges</span>(t; penalty<span class="op">=</span><span class="fl">1.0</span>, parallel<span class="op">=</span><span class="cn">true</span>)</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    est_dag <span class="op">=</span> CausalInference.<span class="fu">pdag2dag!</span>(est_g)</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    scm <span class="op">=</span> CausalInference.<span class="fu">estimate_equations</span>(t, est_dag)</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> scm</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>.</p>
 </section>
 </section>
 </section>
