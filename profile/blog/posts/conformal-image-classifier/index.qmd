@@ -10,17 +10,17 @@ description: >-
   A guide demonstrating how to use [`ConformalPrediction.jl`](https://github.com/juliatrustworthyai/ConformalPrediction.jl) to conformalize a deep image classifier in a few lines of code.
 image: www/intro.gif
 engine: julia
-draft: false
+julia: 
+  exeflags: ["--project=./"]
 ---
 
 ```{julia}
 #| echo: false
 
-using Pkg; Pkg.activate("blog/posts/conformal-image-classifier/")
 using Plots
 using Random
 Random.seed!(2022)
-www_path = "blog/posts/conformal-image-classifier/www"
+www_path = "www"
 ```
 
 <div class="intro-gif">
