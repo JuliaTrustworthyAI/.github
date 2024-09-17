@@ -114,7 +114,7 @@ df = (x=x, v=v, w=w, z=z, s=s)
 
 est_g, score = ges(df; penalty=1.0, parallel=true)
 
-plt = graphplot(pdag2dag!(est_g), names= [String(k) for k in keys(df)], size=(500,500), nodesize=0.3)
+plt = graphplot(pdag2dag!(est_g), names= [String(k) for k in keys(df)], size=(500,500), nodesize=0.1, fontsize=2)
 savefig(plt, "www/intro.png")
 display(plt)
 ```
