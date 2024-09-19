@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.5.57">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Jorge Luiz Franco">
+<meta name="dcterms.date" content="2024-09-17">
+<meta name="description" content="This post introduces a new tool in CounterfactualExplanations.jl, enhancing the package with causal reasoning to generate counterfactual explanations.">
+
+<title>When Causality meets Recourse</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script><script src="index_files/libs/clipboard/clipboard.min.js"></script>
+<script src="index_files/libs/quarto-html/quarto.js"></script>
+<script src="index_files/libs/quarto-html/popper.min.js"></script>
+<script src="index_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="index_files/libs/quarto-html/anchor.min.js"></script>
+<link href="index_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="index_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="index_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="index_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="index_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" integrity="sha512-c3Nl8+7g4LMSTdrm621y7kf9v3SDPnhxLNhcjFJbKECVnmZHTdo+IRO05sNLTH/D3vA6u1X32ehoLC7WFVdheg==" crossorigin="anonymous"></script>
+
+<script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="fullcontent">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">When Causality meets Recourse</h1>
+<p class="subtitle lead">Counterfactual Explanations through Structural Causal Models</p>
+  <div class="quarto-categories">
+    <div class="quarto-category">counterfactuals</div>
+    <div class="quarto-category">explainable AI</div>
+    <div class="quarto-category">causality</div>
+    <div class="quarto-category">Julia</div>
+  </div>
+  </div>
+
+<div>
+  <div class="description">
+    <p>This post introduces a new tool in CounterfactualExplanations.jl, enhancing the package with causal reasoning to generate counterfactual explanations.</p>
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p><a href="https://www.linkedin.com/in/jorgelwyz/">Jorge Luiz Franco</a> </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">September 17, 2024</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="introduction" class="level1">
+<h1>Introduction</h1>
+<p>In recent years, the need for interpretable and explainable AI has surged, particularly in high-stakes domains. Counterfactual explanations provide a means to understand how changes to input features could alter the outcomes of machine learning models. This blog post presents a new tool in the CounterfactualExplanations.jl package, developed during my JSoC (Julia Summer of Code) project, which incorporates causal reasoning into counterfactual generation.</p>
+</section>
+<section id="project-overview" class="level1">
+<h1>Project Overview</h1>
+<p>This project aimed to enhance the CounterfactualExplanations.jl package by infusing it with a robust mathematical foundation for minimal algorithmic recourse, based on the principles of causal reasoning <span class="citation" data-cites="karimi2021algorithmic">[@karimi2021algorithmic]</span>.</p>
+<section id="key-contributions" class="level2">
+<h2 class="anchored" data-anchor-id="key-contributions">Key Contributions</h2>
+<p>During the project, I contributed to two key repositories:</p>
+<ol type="1">
+<li><p><strong>CounterfactualExplanations.jl</strong>: Developed a new tool for generating counterfactual explanations using causal information. This allows users to create smarter perturbations rather than random adjustments, ultimately providing more meaningful insights.</p></li>
+<li><p><strong>CausalInference.jl</strong>: Implemented a Structural Causal Model (SCM) structure that extracts information from data, laying the groundwork for the causal reasoning capabilities in CounterfactualExplanations.jl.</p></li>
+</ol>
+<p>This was an amazing experience, not just experience contribute to two repositories simultaneously, but also to work with the mantainers of these repos. I learned a lot about the Julia language and the Julia community. This was possible because of the mentorship of Patrick Altmeyer (CounterfactualExplanations) and Moritz Schauer (CausalInference), who guided me throughout the project and are amazing researchers.</p>
+</section>
+<section id="the-mintgenerator" class="level2">
+<h2 class="anchored" data-anchor-id="the-mintgenerator">The <code>MINTGenerator</code></h2>
+<p>In this project, we developed the MINTGenerator, a counterfactual generator based on the Recourse through Minimal Intervention (MINT) method proposed by <span class="citation" data-cites="karimi2021algorithmic">@karimi2021algorithmic</span>.</p>
+</section>
+<section id="description" class="level2">
+<h2 class="anchored" data-anchor-id="description">Description</h2>
+<p>The MINTGenerator incorporates causal reasoning in algorithm recourse to achieve minimal interventions when generating a counterfactual explanation. In this sense, the main ideia is that just perturbating a black box model without taking into account the causal relations in the data can guide to misleading recommendations. Here we now shift to a perspective where every action/pertubation is an intervetion in the causal graph of the problem, thus the change is not made just in the intervened upon variable, but also in its childs in the causal structure. The generator utilizes a Structural Causal Model(SCM) to encode the variables in a way that causal effects are propagated and uses a generic gradient-based generator to create the search path, that is, any gradient-base generator (ECCo <span class="citation" data-cites="altmeyer2024faithful">[@altmeyer2024faithful]</span>, REVISE, Watcher, …) can be used with the MINT SCM encoder to generate counterfactual samples in latent space for minimal intervetions algorithm recourse.</p>
+<p>The MINT algorithm minimizes a loss function that combines the causal constraints of the SCM and the distance between the generated counterfactual and the original input. Since we want a gradient-based generator, we need to pass the constrained optimizaiton problem into an unconstrained one and we do this by using the Lagrangian. Initially, as defined in <span class="citation" data-cites="karimi2021algorithmic">[@karimi2021algorithmic]</span>, we aim to aim to find the minimal cost set of actions <span class="math inline">\(A\)</span> (in the form of structural interventions) that results in a counterfactual instance yielding the favorable output from <span class="math inline">\(h\)</span>,</p>
+<p><span class="math display">\[
+\begin{aligned}
+A^* \in \arg\min_A \text{cost}(A; \mathbf{x}_F)\\
+\textrm{s.t.} \quad  h(\mathbf{x}_{SCF}) \neq h(\mathbf{x}_F) \; \; \text{,}\\
+\end{aligned}
+\]</span></p>
+<p>where <span class="math inline">\(\mathbf{x}_F\)</span> is the original input, <span class="math inline">\(\mathbf{x}_{SCF}\)</span> is the counterfactual instance, and <span class="math inline">\(h\)</span> is the black-box model. We use the <span class="math inline">\(\mathbf{x}_{SCF}\)</span> terminology because the counterfactual is derived from the SCM,</p>
+<p><span class="math display">\[
+x_{SCF_i} =
+\begin{cases}
+x_{F_i} + \delta_i, &amp; \text{if } i \in I \\
+x_{F_i} + f_i(\text{pa}_{SCF_i}) - f_i(\text{pa}_{F_i}), &amp; \text{if } i \notin I  \; \; \text{,}
+\end{cases}
+\]</span></p>
+<p>where <span class="math inline">\(I\)</span> is the set of intervened upon variables, <span class="math inline">\(f_i\)</span> is the function that generates the value of the variable <span class="math inline">\(i\)</span> given its parents, and <span class="math inline">\(\text{pa}_{SCF_i}\)</span> and <span class="math inline">\(\text{pa}_{F_i}\)</span> are the parents of the variable <span class="math inline">\(i\)</span> in the counterfactual and original instance, respectively. This closed formula for the decision variable <span class="math inline">\(\mathbf{x}_{SCF}\)</span> is what makes possible to use a gradient-based generator, since with it the lagrangian is differentiable,</p>
+<p><span class="math display">\[
+\mathcal{L}(A ; \lambda) = \text{cost}(A; \mathbf{x}_F) + \lambda \left(h(\mathbf{x}_{SCF}) - h(\mathbf{x}_F) \right) \; \; \text{,}
+\]</span></p>
+<p>or in simple terms and more standard, since <span class="math inline">\(\lambda\)</span> is constant,</p>
+<p><span class="math display">\[
+\mathcal{L_{\texttt{MINT}}}(\mathbf{x}_{SCF}) = \lambda \text{cost}(\mathbf{x}_{SCF}; \mathbf{x}_F) + \text{yloss}(\mathbf{x}_{SCF},y^*) \; \; \text{,}
+\]</span></p>
+<p>where <span class="math inline">\(y^*\)</span> is clearly <span class="math inline">\(h(x_F)\)</span> and <span class="math inline">\(\text{yloss}\)</span> is :</p>
+<p><span class="math display">\[
+\text{yloss}(\mathbf{x}_{SCF}, y^*) = h \left(\left\{ x_{F_i} + \delta_i [i \in I] + \left(f_i(\text{pa}_{SCF_i}) - f_i(\text{pa}_{F_i}) \right) [i \notin I] \right\}_{i=1}^n \right) - y^* \; \; \text{.}
+\]</span></p>
+</section>
+<section id="implementation" class="level2">
+<h2 class="anchored" data-anchor-id="implementation">Implementation</h2>
+<section id="causalinference.jl" class="level3">
+<h3 class="anchored" data-anchor-id="causalinference.jl"><code>CausalInference.jl</code></h3>
+<p>In terms of implementation, we need to capture the causal relations from the data, that’s where <code>CausalInference.jl</code> comes in. However, before the project, the package did not have a SCM structure, in the sense that the methods just captured the topological Directed Acyclic Graph (DAG) that showed the causality ruling the data, that is, no causal structural equations were provided,</p>
+<div id="2" class="cell" data-execution_count="1">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">CausalInference</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">CounterfactualExplanations</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">CounterfactualExplanations.GenerativeModels</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">Graphs</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">GraphRecipes</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">MultivariateStats</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">Plots</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">Random</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="bu">Random</span>.<span class="fu">seed!</span>(<span class="fl">1</span>)</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">StatsBase</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>N <span class="op">=</span> <span class="fl">2000</span> <span class="co"># number of data points</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>x <span class="op">=</span> <span class="fu">randn</span>(N)</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>v <span class="op">=</span> x <span class="op">+</span> <span class="fu">randn</span>(N)<span class="op">*</span><span class="fl">0.25</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>w <span class="op">=</span> x <span class="op">+</span> <span class="fu">randn</span>(N)<span class="op">*</span><span class="fl">0.25</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>z <span class="op">=</span> v <span class="op">+</span> w <span class="op">+</span> <span class="fu">randn</span>(N)<span class="op">*</span><span class="fl">0.25</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>s <span class="op">=</span> z <span class="op">+</span> <span class="fu">randn</span>(N)<span class="op">*</span><span class="fl">0.25</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> (x<span class="op">=</span>x, v<span class="op">=</span>v, w<span class="op">=</span>w, z<span class="op">=</span>z, s<span class="op">=</span>s)</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>est_g, score <span class="op">=</span> <span class="fu">ges</span>(df; penalty<span class="op">=</span><span class="fl">1.0</span>, parallel<span class="op">=</span><span class="cn">true</span>)</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>plt <span class="op">=</span> <span class="fu">graphplot</span>(<span class="fu">pdag2dag!</span>(est_g), names<span class="op">=</span> [<span class="fu">String</span>(k) for k <span class="kw">in</span> <span class="fu">keys</span>(df)], size<span class="op">=</span>(<span class="fl">500</span>,<span class="fl">500</span>), nodesize<span class="op">=</span><span class="fl">0.1</span>, fontsize<span class="op">=</span><span class="fl">25</span>)</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a><span class="fu">savefig</span>(plt, <span class="st">"www/intro.png"</span>)</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a><span class="fu">display</span>(plt)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>┌ Warning: Only one thread available
+└ @ CausalInference ~/.julia/packages/CausalInference/ozcj8/src/ges.jl:52</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<!--?xml version="1.0" encoding="utf-8"?-->
+<svg xmlns="http://www.w3.org/2000/svg" xlink="http://www.w3.org/1999/xlink" width="500" height="500" viewbox="0 0 2000 2000">
+<defs>
+  <clippath id="clip720">
+    <rect x="0" y="0" width="2000" height="2000"></rect>
+  </clippath>
+</defs>
+<path clip-path="url(#clip720)" d="M0 2000 L2000 2000 L2000 0 L0 0  Z" fill="#ffffff" fill-rule="evenodd" fill-opacity="1"></path>
+<defs>
+  <clippath id="clip721">
+    <rect x="400" y="200" width="1401" height="1401"></rect>
+  </clippath>
+</defs>
+<path clip-path="url(#clip720)" d="M47.2441 1952.76 L1952.76 1952.76 L1952.76 47.2441 L47.2441 47.2441  Z" fill="#ffffff" fill-rule="evenodd" fill-opacity="1"></path>
+<defs>
+  <clippath id="clip722">
+    <rect x="47" y="47" width="1907" height="1907"></rect>
+  </clippath>
+</defs>
+<polyline clip-path="url(#clip722)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="319.46,567.322 334.671,565.41 349.866,563.492 365.03,561.562 380.145,559.616 395.196,557.647 410.166,555.649 425.041,553.618 439.803,551.546 454.438,549.428 468.927,547.26 483.257,545.034 497.41,542.746 511.371,540.389 525.124,537.958 538.652,535.448 551.939,532.852 564.971,530.164 577.729,527.38 590.199,524.493 602.365,521.498 614.21,518.389 625.718,515.16 636.874,511.806 647.661,508.321 658.064,504.699 668.083,500.94 677.733,497.051 687.031,493.036 695.992,488.901 704.632,484.653 712.968,480.296 721.015,475.836 728.79,471.28 736.308,466.632 743.586,461.899 750.639,457.086 757.484,452.199 764.137,447.244 770.613,442.226 776.93,437.151 783.101,432.024 789.145,426.852 795.076,421.64 800.911,416.394 806.666,411.12 812.357,405.822 818,400.508 823.611,395.182 829.205,389.85 "></polyline>
+<polyline clip-path="url(#clip722)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="797.14,399.688 829.205,389.85 817.836,421.405 "></polyline>
+<polyline clip-path="url(#clip722)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="829.205,389.85 823.611,395.182 "></polyline>
+<polyline clip-path="url(#clip722)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="527.079,1488.89 526.41,1467.87 525.731,1446.87 525.036,1425.9 524.314,1404.97 523.559,1384.11 522.76,1363.33 521.91,1342.65 521,1322.08 520.021,1301.64 518.965,1281.34 517.823,1261.2 516.586,1241.24 515.247,1221.47 513.796,1201.91 512.224,1182.58 510.524,1163.48 508.687,1144.64 506.703,1126.08 504.565,1107.8 502.264,1089.83 499.791,1072.17 497.138,1054.86 494.296,1037.9 491.256,1021.3 488.011,1005.09 484.56,989.267 480.911,973.811 477.074,958.707 473.056,943.94 468.867,929.494 464.514,915.353 460.007,901.5 455.354,887.919 450.564,874.596 445.644,861.512 440.605,848.654 435.454,836.004 430.2,823.546 424.851,811.264 419.417,799.143 413.905,787.167 408.324,775.318 402.684,763.582 396.992,751.942 391.257,740.382 385.488,728.887 379.692,717.439 373.88,706.024 368.059,694.624 "></polyline>
+<polyline clip-path="url(#clip722)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="368.343,728.164 368.059,694.624 395.062,714.521 "></polyline>
+<polyline clip-path="url(#clip722)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="368.059,694.624 373.88,706.024 "></polyline>
+<polyline clip-path="url(#clip722)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="527.079,1488.89 542.316,1487.01 557.537,1485.13 572.725,1483.24 587.866,1481.33 602.942,1479.39 617.938,1477.43 632.839,1475.44 647.627,1473.4 662.287,1471.32 676.803,1469.18 691.159,1466.99 705.338,1464.73 719.326,1462.41 733.105,1460.01 746.66,1457.53 759.975,1454.96 773.034,1452.3 785.82,1449.55 798.319,1446.69 810.513,1443.72 822.386,1440.64 833.924,1437.43 845.109,1434.1 855.926,1430.64 866.359,1427.04 876.409,1423.3 886.09,1419.43 895.419,1415.43 904.411,1411.31 913.084,1407.08 921.452,1402.74 929.532,1398.29 937.339,1393.75 944.891,1389.11 952.202,1384.39 959.289,1379.59 966.168,1374.71 972.854,1369.76 979.365,1364.75 985.715,1359.69 991.922,1354.57 998,1349.4 1003.97,1344.2 1009.84,1338.96 1015.63,1333.69 1021.35,1328.4 1027.03,1323.09 1032.68,1317.77 1038.3,1312.44 "></polyline>
+<polyline clip-path="url(#clip722)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="1006.2,1322.16 1038.3,1312.44 1026.82,1343.96 "></polyline>
+<polyline clip-path="url(#clip722)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="1038.3,1312.44 1032.68,1317.77 "></polyline>
+<polyline clip-path="url(#clip722)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="935.562,319.46 936.269,340.513 936.985,361.551 937.718,382.556 938.477,403.513 939.269,424.406 940.105,445.219 940.992,465.935 941.939,486.539 942.954,507.014 944.047,527.345 945.225,547.516 946.498,567.509 947.873,587.31 949.359,606.903 950.966,626.27 952.701,645.397 954.573,664.267 956.59,682.864 958.762,701.172 961.096,719.175 963.602,736.857 966.288,754.202 969.162,771.193 972.233,787.815 975.509,804.053 978.99,819.906 982.669,835.39 986.535,850.52 990.582,865.313 994.8,879.786 999.181,893.953 1003.72,907.831 1008.4,921.436 1013.21,934.785 1018.16,947.892 1023.23,960.775 1028.4,973.449 1033.68,985.93 1039.06,998.235 1044.52,1010.38 1050.05,1022.38 1055.66,1034.25 1061.32,1046.01 1067.04,1057.67 1072.8,1069.25 1078.59,1080.77 1084.41,1092.24 1090.25,1103.68 1096.1,1115.1 "></polyline>
+<polyline clip-path="url(#clip722)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="1095.78,1081.56 1096.1,1115.1 1069.08,1095.23 "></polyline>
+<polyline clip-path="url(#clip722)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="1096.1,1115.1 1090.25,1103.68 "></polyline>
+<polyline clip-path="url(#clip722)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="1144.86,1242.4 1154.3,1255.18 1163.74,1267.94 1173.17,1280.67 1182.6,1293.34 1192.01,1305.95 1201.41,1318.48 1210.79,1330.9 1220.16,1343.2 1229.5,1355.37 1238.82,1367.39 1248.12,1379.24 1257.38,1390.9 1266.61,1402.36 1275.81,1413.61 1284.97,1424.61 1294.09,1435.36 1303.17,1445.84 1312.2,1456.04 1321.18,1465.93 1330.11,1475.5 1338.99,1484.74 1347.82,1493.61 1356.58,1502.12 1365.29,1510.24 1373.93,1517.96 1382.5,1525.27 1391.02,1532.19 1399.48,1538.74 1407.88,1544.94 1416.22,1550.8 1424.52,1556.34 1432.77,1561.57 1440.97,1566.52 1449.13,1571.2 1457.25,1575.62 1465.34,1579.81 1473.39,1583.78 1481.4,1587.55 1489.39,1591.13 1497.35,1594.54 1505.29,1597.8 1513.2,1600.93 1521.1,1603.93 1528.98,1606.84 1536.85,1609.66 1544.71,1612.42 1552.56,1615.12 1560.4,1617.79 1568.24,1620.44 "></polyline>
+<polyline clip-path="url(#clip722)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="1544.63,1596.62 1568.24,1620.44 1535.02,1625.04 "></polyline>
+<polyline clip-path="url(#clip722)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="1568.24,1620.44 1560.4,1617.79 "></polyline>
+<path clip-path="url(#clip722)" d="M466.457 567.322 L392.958 440.019 L245.962 440.019 L172.463 567.322 L245.962 694.624 L392.958 694.624 L466.457 567.322 L466.457 567.322  Z" fill="#009af9" fill-rule="evenodd" fill-opacity="1"></path>
+<polyline clip-path="url(#clip722)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="466.457,567.322 392.958,440.019 245.962,440.019 172.463,567.322 245.962,694.624 392.958,694.624 466.457,567.322 "></polyline>
+<path clip-path="url(#clip722)" d="M674.076 1488.89 L600.578 1361.59 L453.581 1361.59 L380.083 1488.89 L453.581 1616.19 L600.578 1616.19 L674.076 1488.89 L674.076 1488.89  Z" fill="#009af9" fill-rule="evenodd" fill-opacity="1"></path>
+<polyline clip-path="url(#clip722)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="674.076,1488.89 600.578,1361.59 453.581,1361.59 380.083,1488.89 453.581,1616.19 600.578,1616.19 674.076,1488.89 "></polyline>
+<path clip-path="url(#clip722)" d="M1082.56 319.46 L1009.06 192.157 L862.064 192.157 L788.566 319.46 L862.064 446.763 L1009.06 446.763 L1082.56 319.46 L1082.56 319.46  Z" fill="#009af9" fill-rule="evenodd" fill-opacity="1"></path>
+<polyline clip-path="url(#clip722)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="1082.56,319.46 1009.06,192.157 862.064,192.157 788.566,319.46 862.064,446.763 1009.06,446.763 1082.56,319.46 "></polyline>
+<path clip-path="url(#clip722)" d="M1291.86 1242.4 L1218.36 1115.1 L1071.37 1115.1 L997.868 1242.4 L1071.37 1369.71 L1218.36 1369.71 L1291.86 1242.4 L1291.86 1242.4  Z" fill="#009af9" fill-rule="evenodd" fill-opacity="1"></path>
+<polyline clip-path="url(#clip722)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="1291.86,1242.4 1218.36,1115.1 1071.37,1115.1 997.868,1242.4 1071.37,1369.71 1218.36,1369.71 1291.86,1242.4 "></polyline>
+<path clip-path="url(#clip722)" d="M1827.54 1680.54 L1754.04 1553.24 L1607.04 1553.24 L1533.54 1680.54 L1607.04 1807.84 L1754.04 1807.84 L1827.54 1680.54 L1827.54 1680.54  Z" fill="#009af9" fill-rule="evenodd" fill-opacity="1"></path>
+<polyline clip-path="url(#clip722)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="1827.54,1680.54 1754.04,1553.24 1607.04,1553.24 1533.54,1680.54 1607.04,1807.84 1754.04,1807.84 1827.54,1680.54 "></polyline>
+<circle clip-path="url(#clip722)" style="fill:#009af9; stroke:none; fill-opacity:0" cx="319.46" cy="567.322" r="2"></circle>
+<circle clip-path="url(#clip722)" style="fill:#009af9; stroke:none; fill-opacity:0" cx="527.079" cy="1488.89" r="2"></circle>
+<circle clip-path="url(#clip722)" style="fill:#009af9; stroke:none; fill-opacity:0" cx="935.562" cy="319.46" r="2"></circle>
+<circle clip-path="url(#clip722)" style="fill:#009af9; stroke:none; fill-opacity:0" cx="1144.86" cy="1242.4" r="2"></circle>
+<circle clip-path="url(#clip722)" style="fill:#009af9; stroke:none; fill-opacity:0" cx="1680.54" cy="1680.54" r="2"></circle>
+<path clip-path="url(#clip720)" d="M357.22 540.304 L327.924 579.728 L358.739 621.322 L343.042 621.322 L319.46 589.493 L295.878 621.322 L280.181 621.322 L311.648 578.932 L282.857 540.304 L298.555 540.304 L320.039 569.166 L341.523 540.304 L357.22 540.304 Z" fill="#000000" fill-rule="nonzero" fill-opacity="1"></path><path clip-path="url(#clip720)" d="M487.655 1461.87 L501.761 1461.87 L527.079 1529.87 L552.398 1461.87 L566.503 1461.87 L536.122 1542.89 L518.037 1542.89 L487.655 1461.87 Z" fill="#000000" fill-rule="nonzero" fill-opacity="1"></path><path clip-path="url(#clip720)" d="M881.201 292.442 L894.511 292.442 L911.148 355.665 L927.714 292.442 L943.411 292.442 L960.049 355.665 L976.614 292.442 L989.924 292.442 L968.729 373.46 L953.032 373.46 L935.598 307.054 L918.093 373.46 L902.396 373.46 L881.201 292.442 Z" fill="#000000" fill-rule="nonzero" fill-opacity="1"></path><path clip-path="url(#clip720)" d="M1114.16 1215.39 L1177.38 1215.39 L1177.38 1227.54 L1127.32 1285.77 L1177.38 1285.77 L1177.38 1296.4 L1112.35 1296.4 L1112.35 1284.25 L1162.41 1226.02 L1114.16 1226.02 L1114.16 1215.39 Z" fill="#000000" fill-rule="nonzero" fill-opacity="1"></path><path clip-path="url(#clip720)" d="M1707.16 1655.91 L1707.16 1668.5 Q1701.52 1665.6 1695.44 1664.16 Q1689.37 1662.71 1682.85 1662.71 Q1672.94 1662.71 1667.95 1665.75 Q1663.03 1668.79 1663.03 1674.86 Q1663.03 1679.49 1666.58 1682.17 Q1670.12 1684.77 1680.83 1687.16 L1685.39 1688.17 Q1699.56 1691.21 1705.5 1696.78 Q1711.5 1702.28 1711.5 1712.19 Q1711.5 1723.47 1702.53 1730.06 Q1693.63 1736.64 1678.01 1736.64 Q1671.5 1736.64 1664.41 1735.34 Q1657.39 1734.11 1649.58 1731.57 L1649.58 1717.83 Q1656.96 1721.66 1664.12 1723.62 Q1671.28 1725.5 1678.3 1725.5 Q1687.7 1725.5 1692.76 1722.31 Q1697.83 1719.06 1697.83 1713.2 Q1697.83 1707.78 1694.14 1704.88 Q1690.52 1701.99 1678.15 1699.31 L1673.52 1698.23 Q1661.15 1695.62 1655.66 1690.27 Q1650.16 1684.84 1650.16 1675.44 Q1650.16 1664.01 1658.26 1657.79 Q1666.36 1651.57 1681.26 1651.57 Q1688.64 1651.57 1695.15 1652.65 Q1701.66 1653.74 1707.16 1655.91 Z" fill="#000000" fill-rule="nonzero" fill-opacity="1"></path></svg>
+</div>
+</div>
+<p>So, our goal was given the DAG provided by the <code>ges</code> method in the causal discovery <span class="citation" data-cites="chickering2003optimal">[@chickering2003optimal]</span>, generate equations that rules each of these causal relations, represented in the DAG as directed edges. The SCM is the union of the DAG and these causal equations, that is, the SCM is a tuple <span class="math inline">\((G, \mathbf{f})\)</span>, where <span class="math inline">\(G\)</span> is the DAG and <span class="math inline">\(\mathbf{f}\)</span> is the set of functions that generates the value of each variable given its parents.</p>
+<p>Our solution for constructing the structural causal equations was to assume that the data was generated by a linear model, ie, the causal relations were linear. For the DAG provided in the code example we derive</p>
+<p><span class="math display">\[ v = \mathcal{b}_v \]</span></p>
+<p><span class="math display">\[ x = \mathcal{a}_{v \to x} v + \mathcal{b}_x \]</span></p>
+<p><span class="math display">\[ w = \mathcal{a}_{x \to w} x + \mathcal{b}_w \]</span></p>
+<p><span class="math display">\[ z = \mathcal{a}_{v \to z} v+ \mathcal{a}_{w \to z} w + \mathcal{b}_z \]</span></p>
+<p><span class="math display">\[ s = \mathcal{a}_{z \to s} z + \mathcal{b}_s \]</span></p>
+<p>and that’s the tricky thing, as we can see these causal equations are different than the ones that generated the data, but they are the ones that respect the causal system obtained from the obtained DAG. Here <span class="math inline">\(\mathcal{b}_i\)</span> and <span class="math inline">\(\mathcal{a}_{i \to j}\)</span> are the intercept term and the coefficient obtained from the linear regression, respectively. To correctly solve the linear regression respecting the dependencies of the causal graph, we use <code>topological_sort_by_dfs</code> from <code>Graphs.jl</code>.</p>
+<p>Now, with the SCM structure in hand, we see that the representation could be a struct containing the DAG and the coefficients/intercepts of the causal equations, this maps exactly the tuple <span class="math inline">\((G, \mathbf{f})\)</span> that we defined. However, since we need these equations to be differentiable, we need to define a function that takes the SCM and returns the value of the variable given its parents and using just the coefficients and the DAG, lead to errors, because <code>AutoDiff</code> does not deal well with functions that are conditioned (<code>if</code> statements). So, we need to define a way to retrieve the system of causal equations in a smooth way and that’s where the <code>causal_effects</code> matrix comes to the rescue.</p>
+<p>Let the factual vector of features be denoted as:</p>
+<p><span class="math display">\[
+\mathbf{x}_F =
+\begin{bmatrix}
+x_{F_1} \\
+x_{F_2} \\
+x_{F_3} \\
+\vdots \\
+x_{F_n}
+\end{bmatrix}
+\]</span></p>
+<p>Let the <code>causal_effects</code> matrix be:</p>
+<p><span class="math display">\[
+\mathbf{C} =
+\begin{bmatrix}
+a_{11} &amp; a_{12} &amp; \cdots &amp; a_{1n} &amp; b_1 \\
+a_{21} &amp; a_{22} &amp; \cdots &amp; a_{2n} &amp; b_2 \\
+a_{31} &amp; a_{32} &amp; \cdots &amp; a_{3n} &amp; b_3 \\
+\vdots &amp; \vdots &amp; \ddots &amp; \vdots &amp; \vdots \\
+a_{n1} &amp; a_{n2} &amp; \cdots &amp; a_{nn} &amp; b_n \\
+\end{bmatrix}
+\]</span></p>
+<p>Here, <span class="math inline">\(a_{ij}\)</span> represents the coefficient from the causal effect of <span class="math inline">\(x_{F_j}\)</span> on <span class="math inline">\(x_{F_i}\)</span>, and <span class="math inline">\(b_i\)</span> represents the intercept term for the variable <span class="math inline">\(x_{F_i}\)</span>.</p>
+<p>The matrix multiplication of the <code>causal_effects</code> matrix with the factual vector (excluding the bias term) is given by:</p>
+<p><span class="math display">\[
+\mathbf{C}_{:, 1:n} \cdot \mathbf{x}_F =
+\begin{bmatrix}
+a_{11} &amp; a_{12} &amp; \cdots &amp; a_{1n} \\
+a_{21} &amp; a_{22} &amp; \cdots &amp; a_{2n} \\
+a_{31} &amp; a_{32} &amp; \cdots &amp; a_{3n} \\
+\vdots &amp; \vdots &amp; \ddots &amp; \vdots \\
+a_{n1} &amp; a_{n2} &amp; \cdots &amp; a_{nn}
+\end{bmatrix}
+\begin{bmatrix}
+x_{F_1} \\
+x_{F_2} \\
+x_{F_3} \\
+\vdots \\
+x_{F_n}
+\end{bmatrix}
+\]</span></p>
+<p>Finally, we add the bias term:</p>
+<p><span class="math display">\[
+\mathbf{x}_{SCF} = \mathbf{C}_{:, 1:n} \cdot \mathbf{x}_F +
+\begin{bmatrix}
+b_1 \\
+b_2 \\
+b_3 \\
+\vdots \\
+b_n
+\end{bmatrix}
+\]</span></p>
+<p>In expanded form:</p>
+<p><span class="math display">\[
+\mathbf{x}_{SCF_i} = a_{i1} x_{F_1} + a_{i2} x_{F_2} + \cdots + a_{in} x_{F_n} + b_i, \quad \forall i = 1, 2, \dots, n
+\]</span></p>
+<p>This equation shows how each counterfactual variable <span class="math inline">\(x_{SCF_i}\)</span> is generated as a linear combination of the factual inputs <span class="math inline">\(x_{F_j}\)</span> based on the causal effects matrix, with an intercept term <span class="math inline">\(b_i\)</span> added for each variable.</p>
+<p>One can note that the <code>orphan</code> nodes, that is, the nodes that do not have parents in the DAG, are going to be equal to the intercept term <span class="math inline">\(\mathcal{b}_\hat{o}\)</span>. The intuition behind this is that when we do the linear regression, variables that have no causal parents are just equal to the unconditional mean of the variable, i.e, we get <span class="math inline">\(x_{SCF_\hat{o}} = \mathbb{E}(x_\hat{o})\)</span>. Because of this, in some cases a better understanding of the regression is needed, so the residuals are also part of the SCM structure,</p>
+<div id="4" class="cell" data-execution_count="0">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> SCM</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    variables<span class="op">::</span><span class="dt">Vector{String}</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    coefficients<span class="op">::</span><span class="dt">Vector{Vector{Float64}}</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    residuals<span class="op">::</span><span class="dt">Vector{Vector{Float64}}</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    dag<span class="op">::</span><span class="dt">DiGraph</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    causal_effects<span class="op">::</span><span class="dt">Matrix{Float64}</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+</section>
+<section id="counterfactualexplanations.jl" class="level3">
+<h3 class="anchored" data-anchor-id="counterfactualexplanations.jl"><code>CounterfactualExplanations.jl</code></h3>
+<p>Now, we need to go into the optimization problem previously described. We seek to minimize the lagrangian function we defined where now we have a differentiable function. The standard way to implement generators in <code>CounterfactualExplanations.jl</code> is to use <code>AutoDiff</code> exactly using composable functions in the lagrangian. The definition of <span class="math inline">\(\mathcal{L_{\texttt{MINT}}}\)</span> is in the same shape of the the others gradient-based generators in the package, so the optimization is straightforward. However, we needed some way to pass the <span class="math inline">\(x_F\)</span> into the <span class="math inline">\(x_{SCF}\)</span> and that’s where <code>transformer.jl</code> comes in. This is where <code>InputTransformer</code>s are defined in the package and in some way this is what we are doing, we are passing our factual to the “latent” causal space of the counterfactual. Our first step is to create a new kind of <code>InputTransformer</code> that is the SCM itself,</p>
+<div id="6" class="cell" data-execution_count="1">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> TypedInputTransformer <span class="op">=</span> <span class="dt">Union</span>{</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">Type</span>{<span class="op">&lt;:</span><span class="dt">StatsBase.AbstractDataTransform</span>},</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">Type</span>{<span class="op">&lt;:</span><span class="dt">MultivariateStats.AbstractDimensionalityReduction</span>},</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">Type</span>{<span class="op">&lt;:</span><span class="dt">GenerativeModels.AbstractGenerativeModel</span>},</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">Type</span>{<span class="op">&lt;:</span><span class="dt">CausalInference.SCM</span>} <span class="co"># The SCM transfromer</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="1">
+<pre><code>Union{Type{&lt;:AbstractDataTransform}, Type{&lt;:MultivariateStats.AbstractDimensionalityReduction}, Type{&lt;:CounterfactualExplanations.GenerativeModels.AbstractGenerativeModel}, Type{&lt;:CausalInference.SCM}}</code></pre>
+</div>
+</div>
+<p>and then we need a way to create this transformer, that’s where we “overload” <code>fit_transformer</code> using <code>CausalInferece.jl</code>,</p>
+<div id="8" class="cell" data-execution_count="1">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">fit_transformer</span>(</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    data<span class="op">::</span><span class="dt">CounterfactualData</span>, input_encoder<span class="op">::</span><span class="dt">Type{&lt;:CausalInference.SCM}</span>; kwargs<span class="op">...</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    t <span class="op">=</span> Tables.<span class="fu">table</span>(<span class="fu">transpose</span>(data.X))</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    est_g, score <span class="op">=</span> CausalInference.<span class="fu">ges</span>(t; penalty<span class="op">=</span><span class="fl">1.0</span>, parallel<span class="op">=</span><span class="cn">true</span>)</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    est_dag <span class="op">=</span> CausalInference.<span class="fu">pdag2dag!</span>(est_g)</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    scm <span class="op">=</span> CausalInference.<span class="fu">estimate_equations</span>(t, est_dag)</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> scm</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="1">
+<pre><code>fit_transformer (generic function with 1 method)</code></pre>
+</div>
+</div>
+<p>… We are getting there! However, now comes the hardest part, where this is placed in the package? Our idea were to place in <code>encondings.jl</code> where we “overloaded” the <code>decode_array</code> function to be composed with the causal effects operation,</p>
+<div id="10" class="cell" data-execution_count="1">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">decode_array</span>(data<span class="op">::</span><span class="dt">CounterfactualData</span>, dt<span class="op">::</span><span class="dt">CausalInference.SCM</span>, x<span class="op">::</span><span class="dt">AbstractArray</span>)</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="fu">run_causal_effects</span>(dt, x)</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">run_causal_effects</span>(scm<span class="op">::</span><span class="dt">CausalInference.SCM</span>, x<span class="op">::</span><span class="dt">AbstractArray</span>)</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> scm.causal_effects[<span class="op">:</span>, <span class="fl">1</span><span class="op">:</span>(<span class="kw">end</span> <span class="op">-</span> <span class="fl">1</span>)] <span class="op">*</span> x <span class="op">+</span> scm.causal_effects[<span class="op">:</span>, <span class="kw">end</span>] <span class="co"># bias</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Here we are! We have a way to pass the causal effects through the <code>AutoDiff</code> steps in the package. That way we didn’t change the workflow of gradient-based generator, but still could achieve the new minimization problem, where now the causal effects equations are part of the differentiable lagrangian automatically computed.</p>
+</section>
+</section>
+<section id="limitations-and-future-work" class="level2">
+<h2 class="anchored" data-anchor-id="limitations-and-future-work">Limitations and Future Work</h2>
+<p>Altough the range of lines of code was not tremendous, the hard work was. The merged code does not show every research and development I was guided during this time by the mentors. For example, initially we were trying a different approach to work with differentiation inside the <code>CounterfactualExplanations.jl</code> package, where the code always broke 😅. But, without this obstacle, we couldn’t have in mind a possible future work where the <code>run_causal_effects</code> function could be more flexible. For example, as we said, the variables without causal parents are been assigned just to the unconditional mean, but in terms of counterfactuals theory, maybe using just the factual feature would be more realistic. But to do this we would need to work in the <code>causal_effects_matrix</code> and this was part of my work creating <code>transformable_features</code> for the SCM where we would probably need to use <code>ignore_derivatives()</code> from <code>Zygote.jl</code>.</p>
+<div id="12" class="cell" data-execution_count="1">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">transformable_features</span>(</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    counterfactual_data<span class="op">::</span><span class="dt">CounterfactualData</span>, input_encoder<span class="op">::</span><span class="dt">Type{CausalInference.SCM}</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    g <span class="op">=</span> counterfactual_data.input_encoder.dag</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    child_causal_nodes <span class="op">=</span> [v for v <span class="kw">in</span> <span class="fu">vertices</span>(g) if <span class="fu">indegree</span>(g, v) <span class="op">&gt;=</span> <span class="fl">1</span>]</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> child_causal_nodes</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Another direction of future work is that the current implementation of the MINTGenerator is limited to linear causal relations. One could extend this to non-linear causal relations, such as those found in neural networks. Additionally, the we could shift the paradigm to use Bayesian Inference to generate the causal equations. This work would be a new extension in <code>CausalInference.jl</code>.</p>
+</section>
+<section id="github-prs-and-issues" class="level2">
+<h2 class="anchored" data-anchor-id="github-prs-and-issues">Github PRs and Issues</h2>
+<p>In the following links, you can find the PRs and issues that were opened and closed during the project. They show some kind of history of the work developed:</p>
+<p><em>Causal Inference</em>:</p>
+<ul>
+<li><a href="https://github.com/mschauer/CausalInference.jl/pull/155">PR1 - SCM</a></li>
+<li><a href="https://github.com/mschauer/CausalInference.jl/pull/157">PR2 - causal effects matrix</a></li>
+<li><a href="https://github.com/mschauer/CausalInference.jl/pull/158">PR3 - version Julia register</a></li>
+<li><a href="https://github.com/mschauer/CausalInference.jl/issues/154">Issue1 - Retrieve equations CausalGraph</a></li>
+</ul>
+<p><em>CounterfactualExplanations</em>:</p>
+<ul>
+<li><a href="https://github.com/JuliaTrustworthyAI/CounterfactualExplanations.jl/pull/461">PR1 - encondings.jl</a></li>
+<li><a href="https://github.com/JuliaTrustworthyAI/CounterfactualExplanations.jl/pull/464">PR2 - Constrained Optimization</a></li>
+<li><a href="https://github.com/JuliaTrustworthyAI/CounterfactualExplanations.jl/pull/468">PR3 - add MINT docs</a></li>
+<li><a href="https://github.com/JuliaTrustworthyAI/CounterfactualExplanations.jl/issues/456">Issue1 - support for SCM</a></li>
+<li><a href="https://github.com/JuliaTrustworthyAI/CounterfactualExplanations.jl/issues/457">Issue2 - Constrained Optimization</a></li>
+<li><a href="https://github.com/JuliaTrustworthyAI/CounterfactualExplanations.jl/issues/467">Issue3 - Document MINT</a></li>
+</ul>
+<p>And one that still open:</p>
+<ul>
+<li><a href="https://github.com/JuliaTrustworthyAI/CounterfactualExplanations.jl/issues/466">Issue4 - MINTGenerator Interface</a></li>
+</ul>
+</section>
+</section>
+<section id="usage" class="level1">
+<h1>Usage</h1>
+<p>The MINT algorithm can be implemented using the <code>GenericGenerator</code> and the SCM encoder, that we implement using <code>CausalInference.jl</code> package. The following code snippet shows how to use the MINT algorithm to generate counterfactuals using any gradient-based generator:</p>
+<div id="14" class="cell" data-execution_count="0">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">CausalInference</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">CounterfactualExplanations</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">CounterfactualExplanations.DataPreprocessing</span>: fit_transformer</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">Tables</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>N <span class="op">=</span> <span class="fl">2000</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> (</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    x <span class="op">=</span> <span class="fu">randn</span>(N), </span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>    v <span class="op">=</span> <span class="fu">randn</span>(N) <span class="op">.^</span> <span class="fl">2</span> <span class="op">+</span> <span class="fu">randn</span>(N) <span class="op">*</span> <span class="fl">0.25</span>, </span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>    w <span class="op">=</span> <span class="fu">cos</span>.(<span class="fu">randn</span>(N)) <span class="op">+</span> <span class="fu">randn</span>(N) <span class="op">*</span> <span class="fl">0.25</span>, </span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>    z <span class="op">=</span> <span class="fu">randn</span>(N) <span class="op">.^</span> <span class="fl">2</span> <span class="op">+</span> <span class="fu">cos</span>.(<span class="fu">randn</span>(N)) <span class="op">+</span> <span class="fu">randn</span>(N) <span class="op">*</span> <span class="fl">0.25</span> <span class="op">+</span> <span class="fu">randn</span>(N) <span class="op">*</span> <span class="fl">0.25</span>, </span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>    s <span class="op">=</span> <span class="fu">sin</span>.(<span class="fu">randn</span>(N) <span class="op">.^</span> <span class="fl">2</span> <span class="op">+</span> <span class="fu">cos</span>.(<span class="fu">randn</span>(N)) <span class="op">+</span> <span class="fu">randn</span>(N) <span class="op">*</span> <span class="fl">0.25</span> <span class="op">+</span> <span class="fu">randn</span>(N) <span class="op">*</span> <span class="fl">0.25</span>) <span class="op">+</span> <span class="fu">randn</span>(N) <span class="op">*</span> <span class="fl">0.25</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>y_lab <span class="op">=</span> <span class="fu">rand</span>(<span class="fl">0</span><span class="op">:</span><span class="fl">2</span>, N)</span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>counterfactual_data_scm <span class="op">=</span> <span class="fu">CounterfactualData</span>(Tables.<span class="fu">matrix</span>(df; transpose<span class="op">=</span><span class="cn">true</span>), y_lab)</span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>M <span class="op">=</span> <span class="fu">fit_model</span>(counterfactual_data_scm, <span class="op">:</span>Linear)</span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>chosen <span class="op">=</span> <span class="fu">rand</span>(<span class="fu">findall</span>(<span class="fu">predict_label</span>(M, counterfactual_data_scm) <span class="op">.==</span> <span class="fl">1</span>))</span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>x <span class="op">=</span> <span class="fu">select_factual</span>(counterfactual_data_scm, chosen)</span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>data_scm <span class="op">=</span> <span class="fu">deepcopy</span>(counterfactual_data_scm)</span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a>data_scm.input_encoder <span class="op">=</span> <span class="fu">fit_transformer</span>(data_scm, CausalInference.SCM)</span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a>ce <span class="op">=</span> <span class="fu">generate_counterfactual</span>(x, <span class="fl">2</span>, data_scm, M, <span class="fu">GenericGenerator</span>(); initialization<span class="op">=:</span>identity)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>For further usage reference access the <a href="https://juliatrustworthyai.github.io/CounterfactualExplanations.jl/dev/explanation/generators/mint/">MINT official documentation</a>.</p>
+</section>
+<section id="conclusion" class="level1">
+<h1>Conclusion</h1>
+<p>During this project, I had the opportunity to contribute to both the XAI and Julia communities, where I developed a SOTA method that used causal information to generate counterfactuals explanations <span class="citation" data-cites="karimi2021algorithmic">[@karimi2021algorithmic]</span>. It was an amazing experience to work with incredible mentors and the community. I would like to once again thank Patrick and Moritz for all their guidance, as well as Jacob Zelko and JuliaHUB for all their support. I learned a lot about the Julia language and the Julia community, and I witnessed firsthand the benefits of Open Source. In fact, it was Open Source that made it possible to contribute to two repositories simultaneously. This experience of working locally on <code>CounterfactualExplanations.jl</code> and <code>CausalInference.jl</code> was invaluable, as it allowed me to truly understand how things work under the hood.</p>
+<p>I hope that the MINTGenerator can be useful to the community and that the package continues to be improved in the future. Contributing to a more trustworthy Artificial Intelligence has always been a goal of mine, and even though my contribution may be small, I feel proud to have achieved something meaningful. My wish is to continue contributing to the responsible use of AI. I am very grateful for this opportunity, and I look forward to continuing to contribute to the community. 🚀🚀🚀</p>
+</section>
+<section id="references" class="level1">
+<h1>References</h1>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    // For code content inside modals, clipBoardJS needs to be initialized with a container option
+    // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

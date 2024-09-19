@@ -47,7 +47,7 @@ Intervention (MINT) method proposed by @karimi2021algorithmic.
 
 ## Description
 
-The MINTGenerator incorporates causal reeasoning in algorithm recourse to achieve minimal interventions when generating a counterfactual explanation. In this sense, the main ideia is that just perturbating a black box model without taking into account the causal relations in the data can guide to misleading recommendations. Here we now shift to a perspective where every action/pertubation is an intervetion in the causal graph of the problem, thus the change is not made just in the intervened upon variable, but also in its childs in the causal structure. The generator utilizes a Structural Causal Model(SCM) to encode the variables in a way that causal effects are propagated and uses a generic gradient-based generator to create the search path, that is, any gradient-base generator (ECCo, REVISE, Watcher, ...) can be used with the MINT SCM encoder to generate counterfactual samples in latent space for minimal intervetions algorithm recourse.
+The MINTGenerator incorporates causal reasoning in algorithm recourse to achieve minimal interventions when generating a counterfactual explanation. In this sense, the main ideia is that just perturbating a black box model without taking into account the causal relations in the data can guide to misleading recommendations. Here we now shift to a perspective where every action/pertubation is an intervetion in the causal graph of the problem, thus the change is not made just in the intervened upon variable, but also in its childs in the causal structure. The generator utilizes a Structural Causal Model(SCM) to encode the variables in a way that causal effects are propagated and uses a generic gradient-based generator to create the search path, that is, any gradient-base generator (ECCo [@altmeyer2024faithful], REVISE, Watcher, ...) can be used with the MINT SCM encoder to generate counterfactual samples in latent space for minimal intervetions algorithm recourse.
 
 The MINT algorithm minimizes a loss function that combines the causal constraints of the SCM and the distance between the generated counterfactual and the original input. Since we want a gradient-based generator, we need to pass the constrained optimizaiton problem into an unconstrained one and we do this by using the Lagrangian. Initially, as defined in [@karimi2021algorithmic], we aim to aim to find the minimal cost set of actions $A$ (in the form of structural interventions) that results in a counterfactual instance yielding the favorable output from $h$,
 
@@ -250,14 +250,115 @@ function fit_transformer(
     return scm
 end
 ```  
-... We are getting there! However, now comes the hardest part, where this is placed?
+... We are getting there! However, now comes the hardest part, where this is placed in the package? Our idea were to place in `encondings.jl` where we "overloaded" the `decode_array` function to be composed with the causal effects operation, 
+
+```{julia}
+#| output: false
+
+function decode_array(data::CounterfactualData, dt::CausalInference.SCM, x::AbstractArray)
+    return run_causal_effects(dt, x)
+end
+
+function run_causal_effects(scm::CausalInference.SCM, x::AbstractArray)
+
+    return scm.causal_effects[:, 1:(end - 1)] * x + scm.causal_effects[:, end] # bias
+
+end
+```
+
+Here we are! We have a way to pass the causal effects through the `AutoDiff` steps in the package. That way we didn't change the workflow of gradient-based generator, but still could achieve the new minimization problem, where now the causal effects equations are part of the differentiable lagrangian automatically computed.
 
 
+## Limitations and Future Work
+
+Altough the range of lines of code was not tremendous, the hard work was. The merged code does not show every research and development I was guided during this time by the mentors. For example, initially we were trying a different approach to work with differentiation inside the `CounterfactualExplanations.jl` package, where the code always broke 😅. But, without this obstacle, we couldn't have in mind a possible future work where the `run_causal_effects` function could be more flexible. For example, as we said, the variables without causal parents are been assigned just to the unconditional mean, but in terms of counterfactuals theory, maybe using just the factual feature would be more realistic. But to do this we would need to work in the `causal_effects_matrix` and this was part of my work creating `transformable_features` for the SCM where we would probably need to use `ignore_derivatives()` from `Zygote.jl`.
+```{julia}
+#| output: false
+function transformable_features(
+    counterfactual_data::CounterfactualData, input_encoder::Type{CausalInference.SCM}
+)
+    g = counterfactual_data.input_encoder.dag
+    child_causal_nodes = [v for v in vertices(g) if indegree(g, v) >= 1]
+    return child_causal_nodes
+end
+```
+
+
+ Another direction of future work is that the current implementation of the MINTGenerator is limited to linear causal relations. One could extend this to non-linear causal relations, such as those found in neural networks. Additionally, the we could shift the paradigm to use Bayesian Inference to generate the causal equations. This work would be a new extension in `CausalInference.jl`.
+
+
+
+## Github PRs and Issues
+
+In the following links, you can find the PRs and issues that were opened and closed during the project. They show some kind of history of the work developed:
+
+*Causal Inference*:
+
+- [PR1 - SCM](https://github.com/mschauer/CausalInference.jl/pull/155)
+- [PR2 - causal effects matrix](https://github.com/mschauer/CausalInference.jl/pull/157)
+- [PR3 - version Julia register](https://github.com/mschauer/CausalInference.jl/pull/158)
+- [Issue1 - Retrieve equations CausalGraph](https://github.com/mschauer/CausalInference.jl/issues/154)
+
+*CounterfactualExplanations*:
+
+- [PR1 - encondings.jl](https://github.com/JuliaTrustworthyAI/CounterfactualExplanations.jl/pull/461)
+- [PR2 - Constrained Optimization](https://github.com/JuliaTrustworthyAI/CounterfactualExplanations.jl/pull/464)
+- [PR3 - add MINT docs](https://github.com/JuliaTrustworthyAI/CounterfactualExplanations.jl/pull/468)
+- [Issue1 - support for SCM](https://github.com/JuliaTrustworthyAI/CounterfactualExplanations.jl/issues/456)
+- [Issue2 - Constrained Optimization](https://github.com/JuliaTrustworthyAI/CounterfactualExplanations.jl/issues/457)
+- [Issue3 - Document MINT](https://github.com/JuliaTrustworthyAI/CounterfactualExplanations.jl/issues/467)
+
+And one that still open: 
+
+- [Issue4 - MINTGenerator Interface](https://github.com/JuliaTrustworthyAI/CounterfactualExplanations.jl/issues/466)
+
+
+
+# Usage
+
+The MINT algorithm can be implemented using the `GenericGenerator` and the SCM encoder, that we implement using `CausalInference.jl` package. The following code snippet shows how to use the MINT algorithm to generate counterfactuals using any gradient-based generator:
+
+```{julia}
+#| eval: false
+#| output: true
+
+using CausalInference
+using CounterfactualExplanations
+using CounterfactualExplanations.DataPreprocessing: fit_transformer
+using Tables
+
+N = 2000
+df = (
+    x = randn(N), 
+    v = randn(N) .^ 2 + randn(N) * 0.25, 
+    w = cos.(randn(N)) + randn(N) * 0.25, 
+    z = randn(N) .^ 2 + cos.(randn(N)) + randn(N) * 0.25 + randn(N) * 0.25, 
+    s = sin.(randn(N) .^ 2 + cos.(randn(N)) + randn(N) * 0.25 + randn(N) * 0.25) + randn(N) * 0.25
+)
+y_lab = rand(0:2, N)
+counterfactual_data_scm = CounterfactualData(Tables.matrix(df; transpose=true), y_lab)
+
+M = fit_model(counterfactual_data_scm, :Linear)
+chosen = rand(findall(predict_label(M, counterfactual_data_scm) .== 1))
+x = select_factual(counterfactual_data_scm, chosen)
+
+data_scm = deepcopy(counterfactual_data_scm)
+data_scm.input_encoder = fit_transformer(data_scm, CausalInference.SCM)
+
+ce = generate_counterfactual(x, 2, data_scm, M, GenericGenerator(); initialization=:identity)
+```
+
+
+For further usage reference access the [MINT official documentation](https://juliatrustworthyai.github.io/CounterfactualExplanations.jl/dev/explanation/generators/mint/).
 
 
 
 # Conclusion
 
-<!-- In conclusion, this project has successfully integrated causal reasoning into the CounterfactualExplanations.jl package, providing a valuable tool for generating counterfactual explanations that are not only interpretable but also actionable. -->
+During this project, I had the opportunity to contribute to both the XAI and Julia communities, where I developed a SOTA method that used causal information to generate counterfactuals explanations [@karimi2021algorithmic]. It was an amazing experience to work with incredible mentors and the community. I would like to once again thank Patrick and Moritz for all their guidance, as well as Jacob Zelko and JuliaHUB for all their support. I learned a lot about the Julia language and the Julia community, and I witnessed firsthand the benefits of Open Source. In fact, it was Open Source that made it possible to contribute to two repositories simultaneously. This experience of working locally on `CounterfactualExplanations.jl` and `CausalInference.jl` was invaluable, as it allowed me to truly understand how things work under the hood.
+
+I hope that the MINTGenerator can be useful to the community and that the package continues to be improved in the future. Contributing to a more trustworthy Artificial Intelligence has always been a goal of mine, and even though my contribution may be small, I feel proud to have achieved something meaningful. My wish is to continue contributing to the responsible use of AI. I am very grateful for this opportunity, and I look forward to continuing to contribute to the community. 🚀🚀🚀
+
+
 
 # References
