@@ -8,12 +8,6 @@ execute:
   echo: true
   output: false
 
-author:
-  - name: Patrick Altmeyer
-    url: https://www.paltmeyer.com/
-    affiliation: Delft University of Technology
-    affiliation-url: https://www.tudelft.nl/en/
-
 comments:
   utterances:
     repo: JuliaTrustworthyAI/.github
@@ -24,11 +18,7 @@ crossref:
   fig-prefix: Figure
   tbl-prefix: Table
 
-format:
-  julia-html:
-    theme: theme-light.scss
-    css: styles.css
-    toc: true
-    code-fold: true
-    code-tools: true
-    code-line-numbers: true
+toc: true
+code-fold: show
+code-tools: true
+code-line-numbers: true

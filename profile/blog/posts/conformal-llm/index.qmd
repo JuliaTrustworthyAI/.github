@@ -9,6 +9,13 @@ categories:
   - Julia
 description: >-
   For this year's edition of the ING Analytics Experiment Week, we put `ConformalPrediction.jl` to work and built a chatbot that can be used for Conformal Intent Recognition.
+author: 
+  - name: Patrick Altmeyer
+    url: www.patalt.org
+    orcid: 0000-0003-4726-8613
+    affiliation: 
+      - name: Delft University of Technology
+        url: https://www.tudelft.nl/en/
 image: www/intro.gif
 jupyter: julia-1.10
 draft: false
