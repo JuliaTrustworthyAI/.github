@@ -221,7 +221,7 @@ $$
 
 This equation shows how each counterfactual variable $x_{SCF_i}$ is generated as a linear combination of the factual inputs $x_{F_j}$ based on the causal effects matrix, with an intercept term $b_i$ added for each variable.
 
-One can note that the `orphan` nodes, that is, the nodes that do not have parents in the DAG, are going to be equal to the intercept term $\mathcal{b}_\hat{o}$. The intuition behind this is that when we do the linear regression, variables that have no causal parents are just equal to the unconditional mean of the variable, i.e, we get $x_{SCF_\hat{o}} = \mathbb{E}(x_\hat{o})$. Because of this, in some cases a better understanding of the regression is needed, so the residuals are also part of the SCM structure,
+One can note that the "orphan" nodes, that is, the nodes that do not have parents in the DAG, are going to be equal to the intercept term $\mathcal{b}_\hat{o}$. The intuition behind this is that when we do the linear regression, variables that have no causal parents are just equal to the unconditional mean of the variable, i.e, we get $x_{SCF_\hat{o}} = \mathbb{E}(x_\hat{o})$. Because of this, in some cases a better understanding of the regression is needed, so the residuals are also part of the SCM structure,
 
 ```{julia}
 #| eval: false
