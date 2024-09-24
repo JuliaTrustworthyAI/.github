@@ -8,6 +8,13 @@ categories:
   - new package
 description: >-
     A short post announcing a small new package: `EnergySamplers.jl` for energy-based sampling. 
+author: 
+  - name: Patrick Altmeyer
+    url: www.patalt.org
+    orcid: 0000-0003-4726-8613
+    affiliation: 
+      - name: Delft University of Technology
+        url: https://www.tudelft.nl/en/
 image: www/intro.gif
 engine: julia
 code-fold: show

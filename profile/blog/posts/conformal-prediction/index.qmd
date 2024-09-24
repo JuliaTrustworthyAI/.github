@@ -8,6 +8,13 @@ categories:
   - Julia
 description: >-
   A (very) gentle introduction to Conformal Prediction in Julia using my new package [`ConformalPrediction.jl`](https://github.com/juliatrustworthyai/ConformalPrediction.jl).
+author: 
+  - name: Patrick Altmeyer
+    url: www.patalt.org
+    orcid: 0000-0003-4726-8613
+    affiliation: 
+      - name: Delft University of Technology
+        url: https://www.tudelft.nl/en/
 image: www/intro.gif
 jupyter: julia-1.10
 draft: false

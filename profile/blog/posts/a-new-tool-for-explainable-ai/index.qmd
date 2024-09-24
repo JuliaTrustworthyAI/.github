@@ -9,10 +9,16 @@ categories:
   - explainable AI
   - Julia
 image: www/intro.gif
+author: 
+  - name: Patrick Altmeyer
+    url: www.patalt.org
+    orcid: 0000-0003-4726-8613
+    affiliation: 
+      - name: Delft University of Technology
+        url: https://www.tudelft.nl/en/
 execute:
   eval: false
   echo: true
-draft: false
 ---
 
 ```{julia}
