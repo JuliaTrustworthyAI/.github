@@ -1,1 +1,1 @@
-This repository contains the source code that builds Taija's website: [www.taija.org](https://www.taija.org/).
+This is a special repository that sets up the landing page for our organization on GitHub.
